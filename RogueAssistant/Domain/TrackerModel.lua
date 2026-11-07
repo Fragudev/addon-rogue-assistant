@@ -358,6 +358,20 @@ function TrackerModel:ResetGroup(groupId)
   return false, "no_default"
 end
 
+-- Puts every group back where it starts, leaving its entries and layout alone. A group the addon does not ship goes to
+-- the centre of the screen.
+function TrackerModel:ResetPositions()
+  local spots = {}
+  for _, fresh in ipairs(defaultGroups()) do
+    spots[fresh.id] = fresh.position
+  end
+  for _, group in ipairs(self:Groups()) do
+    group.position = spots[group.id] or { point = "CENTER", relativePoint = "CENTER", x = 0, y = 0 }
+  end
+  self:Save()
+  return true
+end
+
 -- Restores every group to the defaults.
 function TrackerModel:ResetAll()
   self.settings:Set(PATH, defaultGroups())

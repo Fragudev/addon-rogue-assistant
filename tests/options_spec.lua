@@ -1,17 +1,22 @@
 local Loader = dofile("tests/support/loader.lua")
 
 describe("Options", function()
-  local ns, options, settings, model, redraws, applies
+  local ns, options, settings, model, redraws, applies, bus, banner
 
   local function build()
     ns = Loader.Full({ "Core/Init.lua", "Commands/Slash.lua" })
     local root = {}
     settings = ns.Settings.New(root)
     model = ns.TrackerModel.New(settings)
-    redraws, applies = 0, 0
+    redraws, applies, banner = 0, 0, 0
+    bus = ns.EventBus.New()
     local vm = ns.ViewModelOptions.New({
       settings = settings,
       model = model,
+      bus = bus,
+      refreshAlerts = function()
+        banner = banner + 1
+      end,
       refreshTracker = function()
         redraws = redraws + 1
       end,
@@ -174,6 +179,69 @@ describe("Options", function()
       assert.are.equal("bars", model:Group("essentials").mode)
       buttonLabelled("When an aura is missing: hide it").scripts.OnClick()
       assert.are.equal("dim", model:Group("essentials").showWhenMissing)
+    end)
+
+    it("toggles the status lines check box", function()
+      local check = widgets("CheckButton")[2]
+      assert.is_true(check.checked)
+      check:SetChecked(false)
+      check.scripts.OnClick(check)
+      assert.is_false(settings:Get("poison.statusShown"))
+      assert.are.equal(1, applies)
+    end)
+
+    it("cycles the flyout direction", function()
+      buttonLabelled("Poison list opens: up").scripts.OnClick()
+      assert.are.equal("DOWN", settings:Get("poison.flyoutDirection"))
+      assert.is_not_nil(buttonLabelled("Poison list opens: down"))
+      assert.are.equal(1, applies)
+      for _, label in ipairs({ "down", "left", "right" }) do
+        buttonLabelled("Poison list opens: " .. label).scripts.OnClick()
+      end
+      assert.are.equal("UP", settings:Get("poison.flyoutDirection"))
+    end)
+
+    it("unlocks and locks every element from a button, like the slash commands", function()
+      local events = {}
+      bus:Subscribe("layout.unlock", function()
+        events[#events + 1] = "unlock"
+        settings:Set("poison.locked", false)
+      end)
+      bus:Subscribe("layout.lock", function()
+        events[#events + 1] = "lock"
+        settings:Set("poison.locked", true)
+      end)
+      buttonLabelled("Unlock elements").scripts.OnClick()
+      assert.are.equal(ns.L["layout.unlocked"], options.status.text)
+      buttonLabelled("Lock elements").scripts.OnClick()
+      assert.are.equal(ns.L["layout.locked"], options.status.text)
+      assert.is_not_nil(buttonLabelled("Unlock elements"))
+      assert.are.same({ "unlock", "lock" }, events)
+    end)
+
+    it("refuses to unlock in combat with the existing message", function()
+      local published = 0
+      bus:Subscribe("layout.unlock", function()
+        published = published + 1
+      end)
+      WowStub.state.inCombat = true
+      buttonLabelled("Unlock elements").scripts.OnClick()
+      assert.are.equal(0, published)
+      assert.are.equal(ns.L["layout.combat"], options.status.text)
+    end)
+
+    it("resets every position", function()
+      local spot = { point = "TOP", relativePoint = "TOP", x = 1, y = 2 }
+      settings:Set("poison.position", spot)
+      settings:Set("poison.statusPosition", spot)
+      settings:Set("alerts.position", spot)
+      model:SetPosition("buffs", spot)
+      buttonLabelled("Reset all positions").scripts.OnClick()
+      assert.are.equal(200, settings:Get("poison.position").y)
+      assert.are.equal(198, settings:Get("poison.statusPosition").y)
+      assert.are.equal(-160, settings:Get("alerts.position").y)
+      assert.are.equal(220, model:Group("buffs").position.y)
+      assert.are.same({ 1, 1, 1 }, { redraws, applies, banner })
     end)
 
     it("resets the poison button position", function()

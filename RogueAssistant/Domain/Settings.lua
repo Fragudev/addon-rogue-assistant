@@ -15,8 +15,34 @@ Settings.SCHEMA = {
       return Settings.ValidPosition(value)
     end,
   },
+  -- Just under the poison button (the button is 40 high and sits at BOTTOM 0, 200): the weapon status lines.
+  {
+    path = "poison.statusPosition",
+    default = { point = "TOP", relativePoint = "BOTTOM", x = 0, y = 198 },
+    type = "table",
+    check = function(value)
+      return Settings.ValidPosition(value)
+    end,
+  },
+  { path = "poison.statusShown", default = true, type = "boolean" },
+  {
+    path = "poison.flyoutDirection",
+    default = "UP",
+    type = "string",
+    check = function(value)
+      return ns.Constants.FLYOUT_DIRECTIONS[value] == true
+    end,
+  },
   { path = "poison.scale", default = 1, type = "number", min = 0.5, max = 3 },
   { path = "poison.locked", default = true, type = "boolean" },
+  {
+    path = "alerts.position",
+    default = { point = "TOP", relativePoint = "TOP", x = 0, y = -160 },
+    type = "table",
+    check = function(value)
+      return Settings.ValidPosition(value)
+    end,
+  },
   { path = "alerts.expireMinutes", default = 5, type = "number", min = 0, max = 60 },
   { path = "alerts.charges", default = 20, type = "number", min = 0, max = 999 },
   { path = "alerts.stock", default = 5, type = "number", min = 0, max = 999 },

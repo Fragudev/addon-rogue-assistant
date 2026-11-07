@@ -20,7 +20,8 @@
 
 - **Poison button.** One button holds every poison in your bags. Click it to open the list, left click a poison to
   apply it to your main hand, right click to apply it to your off hand. Shift + left / right click reapplies the last
-  poison used on that hand. Under the button you see how many minutes (and charges) each weapon's poison has left.
+  poison used on that hand. Under the button you see how many minutes (and charges) each weapon's poison has left; the
+  list can open up, down, left or right, and those status lines can be hidden.
 - **Poison reminders.** A chat line and a short on-screen banner, out of combat, when a weapon has no poison, a poison
   is about to expire, its charges run low or the stock in your bags is getting short. Each trigger (entering an
   instance, a ready check, the end of combat) has its own switch. Stock reminders start once you have applied a poison
@@ -28,6 +29,9 @@
 - **Tracker.** Three groups of icons in the style of Blizzard's Cooldown Manager: your **essential cooldowns**, your
   **buffs** and your **debuffs on the target**. Only what your character knows is shown. Each group can show icons or
   bars, and you can add or remove any spell by id or name.
+- **Everything can be moved.** The poison button, its weapon status lines, the reminder banner and every tracker group
+  are draggable once you unlock them with `/ras unlock` or the *Unlock elements* button in the options. While they are
+  unlocked each one shows a highlighted background and its name.
 - **Options.** `/ras` opens a panel in the game's Settings window for everything above.
 - **Rogues only.** On any other class the addon turns itself off.
 
@@ -50,7 +54,7 @@ saved variable, not in the addon folder.
 |---|---|
 | `/ras` | Opens the options. |
 | `/ras help` | Lists the commands. |
-| `/ras unlock` | Unlocks the poison button and the tracker groups so you can drag them. |
+| `/ras unlock` | Unlocks the poison button, its status lines, the reminder banner and the tracker groups so you can drag them. |
 | `/ras lock` | Locks them again. |
 | `/ras debug` | Lists the diagnostic commands (`probe`, `bags`, `spells`, `auras`, `selftest`). |
 

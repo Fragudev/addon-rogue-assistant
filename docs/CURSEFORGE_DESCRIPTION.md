@@ -22,12 +22,14 @@ One button, every poison.
 - **Left click** a poison to apply it to your **main hand**. **Right click** to apply it to your **off hand**.
 - **Shift + left / right click** on the button reapplies the last poison you used on that hand.
 - Under the button you see the minutes left (and the charges, when the game reports them) of each weapon's poison.
+  You can move those lines on their own or hide them.
+- The list can open **up, down, left or right** of the button; you pick the side in the options.
 - **Reminders** out of combat, as a chat line and a short banner: a weapon has no poison, a poison is about to expire,
   charges run low or your stock in the bags is getting short. You get them when you enter an instance, on a ready
   check and when combat ends, and each one has its own switch and threshold. Stock reminders start once you have
   applied a poison through the button (the addon learns which poison is on the weapon).
 
-The list works in combat too. It is rebuilt out of combat, so a poison you pick up during a fight shows up when the
+The list works in combat too (changing its side waits until combat ends). It is rebuilt out of combat, so a poison you pick up during a fight shows up when the
 fight ends.
 
 ## Tracker
@@ -42,8 +44,14 @@ Your cooldowns, your buffs and your debuffs on the target, at a glance.
 - Thousand Cuts and Cutthroat are **not** tracked by default (no confirmed Forever spell id); you can add them, or any
   other spell or aura, by name or id in the options.
 - Cooldown sweep, countdown, stacks and a glow when something is ready. Icons or bars.
-- Move each group with `/ras unlock`. In the options (`/ras`) you set size, spacing, icons per line, growth, scale,
-  opacity out of combat, what to do when an aura is missing (hide or dim), and you reorder, add and remove spells.
+- In the options (`/ras`) you set size, spacing, icons per line, growth, scale, opacity out of combat, what to do when an aura is missing (hide or dim), and you reorder, add and remove spells.
+
+## Move everything
+
+Every element can be moved: each tracker group, the poison button, its weapon status lines and the reminder banner.
+Type `/ras unlock` (or press *Unlock elements* in the options): each element then shows a highlighted background and
+its name, and you drag it where you want. `/ras lock` fixes them again, and *Reset all positions* in the options puts
+everything back. Nothing moves in combat.
 
 ## Honest by design
 
@@ -55,7 +63,7 @@ combat log and nothing acts on its own. Every click does exactly one thing.
 
 - `/ras` opens the options.
 - `/ras help` lists the commands.
-- `/ras unlock` and `/ras lock` move the tracker groups and the poison button.
+- `/ras unlock` and `/ras lock` unlock and lock every movable element.
 - `/ras debug probe` prints what the game client lets the addon read, to help with bug reports.
 
 ## Languages

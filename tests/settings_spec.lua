@@ -22,6 +22,48 @@ describe("Settings", function()
     assert.are.same({}, settings:Get("tracker.groups"))
   end)
 
+  it("fills the defaults of the movable elements", function()
+    assert.are.same({ point = "TOP", relativePoint = "TOP", x = 0, y = -160 }, settings:Get("alerts.position"))
+    assert.are.same({ point = "TOP", relativePoint = "BOTTOM", x = 0, y = 198 }, settings:Get("poison.statusPosition"))
+    assert.is_true(settings:Get("poison.statusShown"))
+    assert.are.equal("UP", settings:Get("poison.flyoutDirection"))
+  end)
+
+  it("validates and round-trips the alert banner and status positions", function()
+    local bad = { { point = "TOP" }, { point = "TOP", relativePoint = "TOP", x = "1", y = 0 }, "TOP" }
+    for _, path in ipairs({ "alerts.position", "poison.statusPosition" }) do
+      local default = Settings.Default(path)
+      for _, position in ipairs(bad) do
+        assert.are.same({ false, "invalid" }, { settings:Set(path, position) })
+        local parts = {}
+        for part in path:gmatch("[^.]+") do
+          parts[#parts + 1] = part
+        end
+        assert.are.same(default, Settings.New({ [parts[1]] = { [parts[2]] = position } }):Get(path))
+      end
+      local good = { point = "LEFT", relativePoint = "LEFT", x = 12, y = -3 }
+      assert.is_true(settings:Set(path, good))
+      assert.are.same(good, settings:Get(path))
+      settings:Reset(path)
+      assert.are.same(default, settings:Get(path))
+    end
+  end)
+
+  it("validates the status switch and the flyout direction", function()
+    assert.is_true(settings:Set("poison.statusShown", false))
+    assert.is_false(settings:Get("poison.statusShown"))
+    assert.is_false((settings:Set("poison.statusShown", "no")))
+    for _, direction in ipairs({ "UP", "DOWN", "LEFT", "RIGHT" }) do
+      assert.is_true(settings:Set("poison.flyoutDirection", direction))
+      assert.are.equal(direction, settings:Get("poison.flyoutDirection"))
+    end
+    assert.are.same({ false, "invalid" }, { settings:Set("poison.flyoutDirection", "SIDEWAYS") })
+    assert.are.same({ false, "invalid" }, { settings:Set("poison.flyoutDirection", 1) })
+    assert.are.equal("RIGHT", settings:Get("poison.flyoutDirection"))
+    assert.are.equal("UP", Settings.New({ poison = { flyoutDirection = "up" } }):Get("poison.flyoutDirection"))
+    assert.is_true(Settings.New({ poison = { statusShown = false } }):Get("poison.statusShown") == false)
+  end)
+
   it("replaces an invalid poison position with the default", function()
     local bad = {
       { point = "TOP" },
