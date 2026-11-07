@@ -1,0 +1,18 @@
+.gitignore
+  h_7d99c7b8818613 1-6
+LICENSE
+  h_7d99c7b8818613 1-32
+README.md
+  h_7d99c7b8818613 1-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "086ad7aca1c18a4693ce9196de6fb662e9964dc4",
+  "prompts": {},
+  "humans": {
+    "h_7d99c7b8818613": {
+      "author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
