@@ -24,7 +24,8 @@ Manager, and one button that holds every poison in your bags.
 1. Install it as described in the [README](../README.md#install).
 2. Log in with a rogue. On any other class the addon turns itself off and prints nothing.
 3. Type `/ras` to open the options. The poison button sits near the bottom centre of the screen and the three tracker
-   groups sit around the centre; `/ras unlock` lets you drag them where you want.
+   groups sit around the centre; `/ras unlock` (or *Unlock elements* in the options) lets you drag every element where
+   you want.
 
 **Language:** the interface is in English, and in Spanish on the `esES` and `esMX` clients. Any other client language
 shows English.
@@ -38,7 +39,10 @@ shows English.
 - **Shift + left click** or **Shift + right click** on the button itself reapplies the last poison you used on that
   hand, as long as it is still in your bags.
 - Under the button you see one line per weapon (`MH`, `OH`): the minutes left and, when the game reports them, the
-  charges. A dash means no poison.
+  charges. A dash means no poison. These status lines are a separate element: you can move them on their own or hide
+  them in the options.
+- The list opens upwards by default. In the options you can make it open **down**, **left** or **right** of the
+  button instead.
 - The button and the list work in combat. The list is rebuilt out of combat, so a poison you pick up during a fight
   shows up when the fight ends.
 
@@ -47,7 +51,8 @@ It learns that when you apply a poison with the button; until then the icon is t
 
 ## Poison reminders
 
-Out of combat, the addon prints one chat line and shows a short banner at the top of the screen when:
+Out of combat, the addon prints one chat line and shows a short banner (by default at the top of the screen; you can
+move it, see [Moving things](#moving-things)) when:
 
 - a weapon has **no poison**;
 - a poison has **fewer minutes left** than your threshold;
@@ -86,10 +91,20 @@ opens in a small movable window of its own. Changes apply at once.
 **Poison button**
 
 - *Lock the poison button in place*: while unlocked you can drag it.
+- *Show the weapon status lines*: shows or hides the `MH` / `OH` lines under the button.
+- *Poison list opens*: click to cycle the side the list opens to (up, down, left, right).
 - *Button scale*.
-- *Reset position*: back to the bottom centre.
+- *Reset position*: puts the poison button back at the bottom centre.
 
-Changes to the button made during combat are saved and applied when combat ends; the panel says so.
+Changes to the button, its status lines and its list made during combat are saved and applied when combat ends; the
+panel says so.
+
+**At the top of the panel**
+
+- *Unlock elements* / *Lock elements*: does the same as `/ras unlock` and `/ras lock`. It does nothing in combat and
+  says so.
+- *Reset all positions*: puts the tracker groups, the poison button, the weapon status lines and the reminder banner
+  back at their default places. It does not change spells, layout options or the other settings.
 
 **Poison alerts**
 
@@ -112,8 +127,22 @@ Pick a group with the group button, then:
 
 ## Moving things
 
-`/ras unlock` shows a handle above every tracker group and lets you drag the poison button. Drag them where you want,
-then `/ras lock`. Nothing moves in combat; the command tells you if it cannot run.
+Everything on screen can be moved: each tracker group, the poison button, the weapon status lines and the reminder
+banner.
+
+1. Type `/ras unlock`, or click *Unlock elements* at the top of the options.
+2. Every movable element now shows a highlighted background and its name. Drag the tracker groups, the status lines
+   and the banner by their labelled handle, and the poison button by the button itself. The banner stays on screen
+   with a sample text so you can place it.
+3. Type `/ras lock` (or click *Lock elements*) when you are done. The banner disappears again unless a reminder is
+   showing.
+
+Positions are saved per character. The weapon status lines sit under the poison button until you move them, and follow
+the button if you move it; once you place them yourself they keep their own spot. The poison list stays attached to
+the button, so it moves with it. *Reset all positions* in the options brings every element back to its default place.
+
+Nothing moves in combat: the command tells you if it cannot run, and a change to the poison button or its list made
+during combat is applied when the fight ends.
 
 ## Slash commands
 
@@ -121,7 +150,7 @@ then `/ras lock`. Nothing moves in combat; the command tells you if it cannot ru
 |---|---|
 | `/ras` | Opens the options. |
 | `/ras help` | Lists the commands. |
-| `/ras unlock` / `/ras lock` | Unlocks or locks the poison button and the tracker groups. |
+| `/ras unlock` / `/ras lock` | Unlocks or locks the poison button, its status lines, the reminder banner and the tracker groups. |
 | `/ras debug probe` | Checks every game API the addon may use and saves the result to the saved variables. |
 | `/ras debug bags` | Lists the items in your bags with their ids (use it to find poison item ids). |
 | `/ras debug spells` | Lists your spellbook with spell ids. |
