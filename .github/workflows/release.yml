@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  # Re-publishes an existing tag, for example after a failed CurseForge upload. The tag's own
+  # files are built; the GitHub release is created only when it does not exist yet.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish (for example v0.1.0-beta.8)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+  CF_PROJECT_ID: "1789047"
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ inputs.tag || github.ref_name }}
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+
+      # Every tag needs hand-written release notes in release-notes/<tag>.md. They are the
+      # changelog on both GitHub and CurseForge, so the release stops before publishing anything.
+      - name: Check release notes
+        run: |
+          if [[ ! -s "release-notes/${TAG}.md" ]]; then
+            echo "::error::Missing release-notes/${TAG}.md. Add it and tag again."
+            exit 1
+          fi
+
+      - name: Build zip
+        run: tools/package.sh "${TAG}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "GitHub release ${TAG} already exists, skipping."
+            exit 0
+          fi
+          prerelease=""
+          if [[ "${TAG}" == *-* ]]; then
+            prerelease="--prerelease"
+          fi
+          gh release create "${TAG}" "RogueAssistant-${TAG}.zip" \
+            --title "Rogue Assistant ${TAG}" \
+            --notes-file "release-notes/${TAG}.md" $prerelease
+
+      # The CurseForge game version is derived from the TOC Interface (16001 -> 1.60.1) and
+      # resolved to its ID. The optional CF_GAME_VERSION_ID repository variable (comma-separated
+      # IDs) overrides it. When neither resolves, the step lists the available versions.
+      - name: Upload to CurseForge
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_GAME_VERSION_ID: ${{ vars.CF_GAME_VERSION_ID }}
+        run: |
+          if [[ -z "${CF_API_TOKEN}" ]]; then
+            echo "::error::Missing CF_API_TOKEN repository secret."
+            exit 1
+          fi
+          versions="$(curl -fsS -H "X-Api-Token: ${CF_API_TOKEN}" https://wow.curseforge.com/api/game/versions)"
+          if [[ -z "${CF_GAME_VERSION_ID}" ]]; then
+            interface="$(sed -n 's/^## Interface://p' RogueAssistant/RogueAssistant.toc | grep -o '[0-9]\+' | head -n 1)"
+            game_version="$((interface / 10000)).$((interface / 100 % 100)).$((interface % 100))"
+            CF_GAME_VERSION_ID="$(jq -r --arg name "${game_version}" \
+              '[.[] | select(.name == $name) | .id] | if length == 1 then .[0] else empty end' <<<"${versions}")"
+            echo "Interface ${interface} -> CurseForge game version ${game_version} (ID '${CF_GAME_VERSION_ID}')"
+          fi
+          if ! jq -e --arg ids "${CF_GAME_VERSION_ID}" \
+            '($ids | split(",") | map(select(test("^ *[0-9]+ *$")) | tonumber)) as $wanted
+             | ($wanted | length) > 0 and ($wanted | length) == ($ids | split(",") | length)
+             and ([.[].id] as $known | all($wanted[]; IN($known[])))' <<<"${versions}" >/dev/null; then
+            echo "::error::Could not resolve a unique CurseForge game version (ID '${CF_GAME_VERSION_ID}'). Set CF_GAME_VERSION_ID to one of these IDs:"
+            jq -r '.[] | "\(.id)\t\(.name)\t(type \(.gameVersionTypeID))"' <<<"${versions}" | tail -n 40
+            exit 1
+          fi
+          # Tags with a pre-release suffix (v0.1.0-beta.7) ship as beta, the rest as release.
+          release_type="release"
+          if [[ "${TAG}" == *-* ]]; then
+            release_type="beta"
+          fi
+          changelog="$(cat "release-notes/${TAG}.md")"
+          metadata="$(jq -n \
+            --arg name "Rogue Assistant ${TAG}" \
+            --arg log "${changelog}" \
+            --arg type "${release_type}" \
+            --argjson versions "[${CF_GAME_VERSION_ID}]" \
+            '{displayName: $name, changelog: $log, changelogType: "markdown", releaseType: $type, gameVersions: $versions}')"
+          # --fail-with-body keeps CurseForge's error message in the log. The metadata goes as
+          # --form-string because -F cuts the value at the first ';' in the changelog.
+          curl -sS --fail-with-body -H "X-Api-Token: ${CF_API_TOKEN}" \
+            --form-string "metadata=${metadata}" \
+            -F "file=@RogueAssistant-${TAG}.zip" \
+            "https://wow.curseforge.com/api/projects/${CF_PROJECT_ID}/upload-file"

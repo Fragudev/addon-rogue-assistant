@@ -1,0 +1,35 @@
+## Interface: 16001
+## Title: Rogue Assistant
+## Notes: Cooldown and aura tracker and a one-button poison menu for rogues.
+## Author: Fragudev
+## Version: @project-version@
+## SavedVariables: RogueAssistantDB
+## IconTexture: Interface\AddOns\RogueAssistant\Media\rogue_assistant_logo
+
+# Interface number measured on the Forever beta client (build 16001) with /dump select(4, GetBuildInfo()).
+
+Core\Constants.lua
+Core\Platform.lua
+Core\Locale.lua
+Locales\enUS.lua
+Locales\esES.lua
+Core\EventBus.lua
+Core\Store.lua
+Core\Startup.lua
+Core\Probe.lua
+Domain\Settings.lua
+Data\Poisons.lua
+Data\Spells.lua
+Domain\PoisonCatalog.lua
+Domain\WeaponState.lua
+Domain\PoisonAlerts.lua
+Domain\TrackerModel.lua
+UI\ViewModelPoisons.lua
+UI\PoisonButton.lua
+UI\PoisonAlertsView.lua
+UI\ViewModelTracker.lua
+UI\TrackerFrames.lua
+UI\ViewModelOptions.lua
+UI\Options.lua
+Core\Init.lua
+Commands\Slash.lua
