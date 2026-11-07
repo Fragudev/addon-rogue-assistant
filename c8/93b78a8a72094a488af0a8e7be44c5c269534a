@@ -1,0 +1,27 @@
+README.md
+  s_7d15dada7060d6::t_a2d213a7e159d6 1,3-5,7-96
+RogueAssistant/Locales/enUS.lua
+  s_7d15dada7060d6::t_619b671ba73cf9 68-70
+RogueAssistant/Locales/esES.lua
+  s_7d15dada7060d6::t_319fb4b7ddc166 71-73
+docs/PRIVACY.md
+  s_7d15dada7060d6::t_58cfb4901b9944 1-56
+docs/USER_GUIDE.md
+  s_7d15dada7060d6::t_d92dcbadf20a99 1-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "c893b78a8a72094a488af0a8e7be44c5c269534a",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
