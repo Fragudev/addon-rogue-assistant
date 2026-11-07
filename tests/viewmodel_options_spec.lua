@@ -1,7 +1,7 @@
 local Loader = dofile("tests/support/loader.lua")
 
 describe("ViewModelOptions", function()
-  local ns, vm, settings, model, root, tracker, poison
+  local ns, vm, settings, model, root, tracker, poison, alerts, bus
 
   before_each(function()
     WowStub.Reset()
@@ -9,10 +9,15 @@ describe("ViewModelOptions", function()
     root = {}
     settings = ns.Settings.New(root)
     model = ns.TrackerModel.New(settings)
-    tracker, poison = 0, 0
+    tracker, poison, alerts = 0, 0, 0
+    bus = ns.EventBus.New()
     vm = ns.ViewModelOptions.New({
       settings = settings,
       model = model,
+      bus = bus,
+      refreshAlerts = function()
+        alerts = alerts + 1
+      end,
       refreshTracker = function()
         tracker = tracker + 1
       end,
@@ -30,7 +35,7 @@ describe("ViewModelOptions", function()
       end
       assert.is_true(vm:Set("poison.scale", 1.5))
       assert.are.equal(1.5, vm:Get("poison.scale"))
-      assert.are.equal(2, poison)
+      assert.are.equal(3, poison)
       for _, path in ipairs(ns.ViewModelOptions.ALERT_NUMBERS) do
         assert.is_true(vm:Set(path, 7))
         assert.are.equal(7, settings:Get(path))
@@ -39,7 +44,23 @@ describe("ViewModelOptions", function()
         assert.is_true(vm:Set(path, false))
         assert.is_false(settings:Get(path))
       end
-      assert.are.equal(2, poison)
+      assert.are.equal(3, poison)
+    end)
+
+    it("cycles the flyout direction and applies it to the button", function()
+      local seen = {}
+      for _ = 1, 5 do
+        assert.is_true(vm:CycleFlyout())
+        seen[#seen + 1] = vm:Get("poison.flyoutDirection")
+      end
+      assert.are.same({ "DOWN", "LEFT", "RIGHT", "UP", "DOWN" }, seen)
+      assert.are.equal(5, poison)
+    end)
+
+    it("says a flyout direction change in combat is applied after combat", function()
+      WowStub.state.inCombat = true
+      assert.are.same({ true, ns.L["options.deferred"] }, { vm:CycleFlyout() })
+      assert.are.equal("DOWN", vm:Get("poison.flyoutDirection"))
     end)
 
     it("snaps numbers to their step", function()
@@ -90,6 +111,59 @@ describe("ViewModelOptions", function()
       assert.are.equal(1, vm.Step("alerts.stock"))
       assert.are.equal(1, vm.Step("columns"))
       assert.are.equal(0.05, vm.Step("poison.scale"))
+    end)
+  end)
+
+  describe("layout", function()
+    it("unlocks and locks every element through the bus", function()
+      local events = {}
+      bus:Subscribe("layout.unlock", function()
+        events[#events + 1] = "unlock"
+      end)
+      bus:Subscribe("layout.lock", function()
+        events[#events + 1] = "lock"
+      end)
+      assert.is_false(vm:IsUnlocked())
+      assert.are.same({ true, ns.L["layout.unlocked"] }, { vm:ToggleLayout() })
+      settings:Set("poison.locked", false)
+      assert.is_true(vm:IsUnlocked())
+      assert.are.same({ true, ns.L["layout.locked"] }, { vm:ToggleLayout() })
+      assert.are.same({ "unlock", "lock" }, events)
+    end)
+
+    it("refuses to change the layout in combat or without a bus", function()
+      local published = 0
+      bus:Subscribe("layout.unlock", function()
+        published = published + 1
+      end)
+      WowStub.state.inCombat = true
+      assert.are.same({ false, ns.L["layout.combat"] }, { vm:ToggleLayout() })
+      assert.are.equal(0, published)
+      WowStub.state.inCombat = false
+      local bare = ns.ViewModelOptions.New({ settings = settings, model = model })
+      assert.are.same({ false, ns.L["layout.unavailable"] }, { bare:ToggleLayout() })
+    end)
+
+    it("puts every position back at its default and refreshes every element", function()
+      local spot = { point = "LEFT", relativePoint = "LEFT", x = 4, y = 5 }
+      model:SetPosition("buffs", spot)
+      settings:Set("poison.position", spot)
+      settings:Set("poison.statusPosition", spot)
+      settings:Set("alerts.position", spot)
+      settings:Set("poison.scale", 2)
+      assert.is_true(vm:ResetAllPositions())
+      assert.are.same({ point = "CENTER", relativePoint = "CENTER", x = 0, y = 220 }, model:Group("buffs").position)
+      assert.are.same(ns.Settings.Default("poison.position"), settings:Get("poison.position"))
+      assert.are.same(ns.Settings.Default("poison.statusPosition"), settings:Get("poison.statusPosition"))
+      assert.are.same(ns.Settings.Default("alerts.position"), settings:Get("alerts.position"))
+      assert.are.equal(2, settings:Get("poison.scale"))
+      assert.are.same({ 1, 1, 1 }, { tracker, alerts, poison })
+    end)
+
+    it("says the protected parts follow after combat", function()
+      WowStub.state.inCombat = true
+      assert.are.same({ true, ns.L["options.deferred"] }, { vm:ResetAllPositions() })
+      assert.are.equal(1, poison)
     end)
   end)
 

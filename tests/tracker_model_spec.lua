@@ -237,6 +237,19 @@ describe("TrackerModel", function()
       assert.are.equal(#ns.Spells.GROUPS[1].entries, #model:Group("essentials").entries)
     end)
 
+    it("resets only the positions of the groups", function()
+      model:SetPosition("buffs", { point = "TOP", relativePoint = "TOP", x = 1, y = 2 })
+      model:SetLayout("buffs", "iconSize", 60)
+      local groups = model:Groups()
+      groups[#groups + 1] =
+        { id = "mine", kind = "buff", entries = {}, position = { point = "TOP", relativePoint = "TOP", x = 9, y = 9 } }
+      assert.is_true(model:ResetPositions())
+      assert.are.same({ point = "CENTER", relativePoint = "CENTER", x = 0, y = 220 }, model:Group("buffs").position)
+      assert.are.equal(60, model:Group("buffs").iconSize)
+      assert.are.same({ point = "CENTER", relativePoint = "CENTER", x = 0, y = 0 }, model:Group("mine").position)
+      assert.are.same({ point = "CENTER", relativePoint = "CENTER", x = 300, y = 60 }, root.tracker.groups[3].position)
+    end)
+
     it("refuses to reset a group the addon does not ship", function()
       local groups = model:Groups()
       groups[#groups + 1] = { id = "mine", kind = "buff", entries = {} }

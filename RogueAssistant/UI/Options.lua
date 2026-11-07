@@ -121,10 +121,34 @@ end
 
 -- Sections -------------------------------------------------------------------------------------------------------
 
+-- The unlock / lock toggle and the reset of every position, at the top of the panel.
+function Options:BuildLayout()
+  local L, vm = self.L, self.vm
+  local toggle = self:Button("", 220, function()
+    self:Report(vm:ToggleLayout())
+    self:Refresh()
+  end, 8)
+  self:Button(L["options.layout.reset"], 200, function()
+    self:Report(vm:ResetAllPositions())
+    self:Refresh()
+  end, 236, 32)
+  self.refreshers[#self.refreshers + 1] = function()
+    toggle:SetText(L[vm:IsUnlocked() and "options.layout.lock" or "options.layout.unlock"])
+  end
+end
+
 function Options:BuildPoison()
   local L, vm = self.L, self.vm
   self:Heading(L["options.section.poison"])
   self:Check(L["options.poison.locked"], "poison.locked")
+  self:Check(L["options.poison.statusShown"], "poison.statusShown")
+  local flyout = self:Button("", 300, function()
+    self:Report(vm:CycleFlyout())
+    self:Refresh()
+  end, 8, 30)
+  self.refreshers[#self.refreshers + 1] = function()
+    flyout:SetText(L["options.poison.flyout"]:format(L["options.flyout." .. vm:Get("poison.flyoutDirection")]))
+  end
   local minimum, maximum = vm.Bounds("poison.scale")
   self:Slider(L["options.poison.scale"], minimum, maximum, vm.Step("poison.scale"), function()
     return vm:Get("poison.scale")
@@ -330,6 +354,7 @@ function Options:BuildContent()
   local _, title = self:Text(L["app.name"], "GameFontNormalLarge", 8, 30)
   title:SetTextColor(1, 0.96, 0.41)
   self.status = self:Text("", "GameFontHighlight", 8, 20)
+  self:BuildLayout()
   self:BuildPoison()
   self:BuildAlerts()
   self:Heading(L["options.section.tracker"])
@@ -436,9 +461,15 @@ ns.Startup.Register(function()
   local viewModel = ns.ViewModelOptions.New({
     settings = ns.settings,
     model = ns.trackerModel,
+    bus = ns.bus,
     refreshTracker = function()
       if ns.trackerFrames then
         ns.trackerFrames:Refresh()
+      end
+    end,
+    refreshAlerts = function()
+      if ns.poisonAlertsView then
+        ns.poisonAlertsView:ApplyPosition()
       end
     end,
     refreshPoison = function()

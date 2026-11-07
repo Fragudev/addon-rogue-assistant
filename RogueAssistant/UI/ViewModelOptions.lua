@@ -8,11 +8,12 @@ ViewModel.__index = ViewModel
 
 -- The settings the panel edits, in the order they are shown.
 ViewModel.POISON_NUMBERS = { "poison.scale" }
-ViewModel.POISON_FLAGS = { "poison.locked" }
+ViewModel.POISON_FLAGS = { "poison.locked", "poison.statusShown" }
 ViewModel.ALERT_NUMBERS = { "alerts.expireMinutes", "alerts.charges", "alerts.stock" }
 ViewModel.ALERT_TRIGGERS = { "alerts.triggers.instance", "alerts.triggers.readycheck", "alerts.triggers.combatEnd" }
 
 -- The cycle values of the choice options.
+ViewModel.FLYOUT = { "UP", "DOWN", "LEFT", "RIGHT" }
 ViewModel.GROWTH = { "RIGHT", "LEFT", "UP", "DOWN" }
 ViewModel.MODES = { "icons", "bars" }
 ViewModel.MISSING = { "hide", "dim" }
@@ -23,15 +24,17 @@ local WHOLE = { iconSize = true, spacing = true, columns = true }
 
 local ALERT_WHOLE = { ["alerts.expireMinutes"] = true, ["alerts.charges"] = true, ["alerts.stock"] = true }
 
--- deps: settings, model (TrackerModel), platform, L, refreshTracker(), refreshPoison().
+-- deps: settings, model (TrackerModel), bus, platform, L, refreshTracker(), refreshPoison(), refreshAlerts().
 function ViewModel.New(deps)
   return setmetatable({
     settings = deps.settings,
     model = deps.model,
+    bus = deps.bus,
     platform = deps.platform or ns.Platform,
     L = deps.L or ns.L,
     refreshTracker = deps.refreshTracker or function() end,
     refreshPoison = deps.refreshPoison or function() end,
+    refreshAlerts = deps.refreshAlerts or function() end,
   }, ViewModel)
 end
 
@@ -116,7 +119,49 @@ function ViewModel:ResetPoisonPosition()
   return true
 end
 
--- Tracker -------------------------------------------------------------------------------------------------------
+-- Moves the poison flyout to the next side (up, down, left, right). The button applies it after combat if needed.
+function ViewModel:CycleFlyout()
+  return self:Set("poison.flyoutDirection", ViewModel.Next(ViewModel.FLYOUT, self:Get("poison.flyoutDirection")))
+end
+
+-- Layout --------------------------------------------------------------------------------------------------------
+
+-- true while the elements are unlocked. The poison button keeps this flag in its settings.
+function ViewModel:IsUnlocked()
+  return self:Get("poison.locked") == false
+end
+
+-- Unlocks or locks every movable element, as /ras unlock and /ras lock do. Returns true plus a confirmation, or false
+-- plus the reason (combat, or the addon not active).
+function ViewModel:ToggleLayout()
+  if not self.bus then
+    return false, self.L["layout.unavailable"]
+  end
+  if self.platform.InCombatLockdown() == true then
+    return false, self.L["layout.combat"]
+  end
+  local unlock = not self:IsUnlocked()
+  self.bus:Publish(unlock and "layout.unlock" or "layout.lock")
+  return true, self.L[unlock and "layout.unlocked" or "layout.locked"]
+end
+
+-- Puts the tracker groups, the poison button, the weapon status lines and the alert banner back at their default
+-- places. The protected button and its status lines are applied after combat when needed.
+function ViewModel:ResetAllPositions()
+  self.model:ResetPositions()
+  self.settings:Reset("poison.position")
+  self.settings:Reset("poison.statusPosition")
+  self.settings:Reset("alerts.position")
+  self.refreshTracker()
+  self.refreshAlerts()
+  self.refreshPoison()
+  if self.platform.InCombatLockdown() == true then
+    return true, self.L["options.deferred"]
+  end
+  return true
+end
+
+-- Tracker --------------------------------------------------------------------------------------------------
 
 -- { { id, title }... } in display order.
 function ViewModel:Groups()
