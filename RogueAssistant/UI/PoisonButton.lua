@@ -591,6 +591,8 @@ ns.Startup.Register(function()
   if ns.disabled then
     return
   end
+  -- Unlocking is a per-session action: every element starts locked, whatever was saved.
+  ns.settings:Set("poison.locked", true)
   ns.poisonButton = PoisonButton.New({
     settings = ns.settings,
     data = ns.profile.poison,

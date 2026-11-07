@@ -613,6 +613,34 @@ describe("PoisonButton", function()
     end)
   end)
 
+  describe("startup lock state", function()
+    it("always starts locked, and the options toggle reads locked", function()
+      WowStub.Reset()
+      ns = Loader.Full({ "Core/Init.lua", "Commands/Slash.lua" })
+      ns.store = ns.Store.Open({})
+      ns.bus = ns.EventBus.New()
+      ns.profile = ns.store:Profile("Player-1")
+      ns.settings = ns.Settings.New(ns.profile.settings)
+      ns.settings:Set("poison.locked", false)
+      ns.weaponState = ns.WeaponState.New({ data = {} })
+      ns.Startup.Run()
+      assert.is_true(ns.settings:Get("poison.locked"))
+      assert.is_true(ns.profile.settings.poison.locked)
+      assert.is_false(ns.poisonButton.button.movable)
+      assert.is_false(ns.poisonButton.status.handle.shown)
+      assert.is_false(ns.trackerFrames.unlocked)
+      assert.is_false(ns.poisonAlertsView.unlocked)
+      assert.is_false(ns.options.vm:IsUnlocked())
+      ns.options.panel.scripts.OnShow()
+      local labels = {}
+      for _, frame in ipairs(WowStub.state.frames) do
+        labels[frame.text or ""] = true
+      end
+      assert.is_true(labels["Unlock elements"])
+      assert.is_nil(labels["Lock elements"])
+    end)
+  end)
+
   describe("tooltips", function()
     local tooltip
 
