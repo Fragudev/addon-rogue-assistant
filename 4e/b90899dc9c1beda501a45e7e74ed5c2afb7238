@@ -1,0 +1,21 @@
+RogueAssistant/UI/TrackerFrames.lua
+  s_7d15dada7060d6::t_7508091a7d9f4e 128-132,134,297
+tests/tracker_frames_spec.lua
+  s_7d15dada7060d6::t_613204d78818ee 383-405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "4eb90899dc9c1beda501a45e7e74ed5c2afb7238",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
