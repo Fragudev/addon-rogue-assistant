@@ -1,0 +1,29 @@
+.luacheckrc
+  s_7d15dada7060d6::t_80c6514fb69fc8 40
+RogueAssistant/Core/Platform.lua
+  s_7d15dada7060d6::t_94d13d70490736 491-518
+RogueAssistant/UI/PoisonButton.lua
+  s_7d15dada7060d6::t_da6ae68701ca60 212-229,411-413
+tests/platform_spec.lua
+  s_7d15dada7060d6::t_ee5e9734a27ef0 497-526
+tests/poison_button_spec.lua
+  s_7d15dada7060d6::t_7507ccf5572586 313-339
+tests/stubs/wow_api.lua
+  s_7d15dada7060d6::t_cd9ca2525044b2 69-71,408-421,463
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "6f5a73d34b33248517d60a9af5551ab61ec29c60",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
