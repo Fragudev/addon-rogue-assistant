@@ -1,0 +1,14 @@
+docs/API_NOTES.md
+  h_7d99c7b8818613 39-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "0b577f2ba6c7fdf60cc108d972f7da84458a94ab",
+  "prompts": {},
+  "humans": {
+    "h_7d99c7b8818613": {
+      "author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
