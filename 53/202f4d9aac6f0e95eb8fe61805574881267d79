@@ -1,0 +1,23 @@
+tools/check_coverage.sh
+  s_7d15dada7060d6::t_79344237273cc9 1-24
+tools/make_tga.swift
+  s_7d15dada7060d6::t_74fba45885e6d8 1-63
+tools/package.sh
+  s_7d15dada7060d6::t_df5d664f0aa39e 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "53202f4d9aac6f0e95eb8fe61805574881267d79",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
