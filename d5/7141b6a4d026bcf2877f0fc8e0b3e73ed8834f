@@ -1,0 +1,41 @@
+RogueAssistant/RogueAssistant.toc
+  s_7d15dada7060d6::t_cdab684662c6a5 26-27
+tests/init_spec.lua
+  s_7d15dada7060d6::t_7d9d384d3e7cb1 69-88
+RogueAssistant/Commands/Slash.lua
+  s_7d15dada7060d6::t_0ca7607a802169 98-111,114-115
+tests/poison_alerts_view_spec.lua
+  s_7d15dada7060d6::t_5fa8718df67c95 1-126
+RogueAssistant/UI/PoisonButton.lua
+  s_7d15dada7060d6::t_dad5b14c0fefae 1-443
+RogueAssistant/Core/EventBus.lua
+  s_7d15dada7060d6::t_918eb6081780bb 5-7
+tests/poison_button_spec.lua
+  s_7d15dada7060d6::t_74f91208ba2a64 1-423
+tests/slash_spec.lua
+  s_7d15dada7060d6::t_92a9b359f9b37b 32-33,40-77
+  s_7d15dada7060d6::t_6cc331b7221a80 78-79
+RogueAssistant/UI/PoisonAlertsView.lua
+  s_7d15dada7060d6::t_8a8173322b5e68 1-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d57141b6a4d026bcf2877f0fc8e0b3e73ed8834f",
+  "prompts": {},
+  "humans": {
+    "h_7d99c7b8818613": {
+      "author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  },
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
