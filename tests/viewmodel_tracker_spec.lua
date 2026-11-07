@@ -238,6 +238,40 @@ describe("ViewModelTracker", function()
     end)
   end)
 
+  describe("aura scans", function()
+    it("scans each unit and filter once for every entry of a refresh", function()
+      player({ { name = "Stealth", spellId = 1784 } })
+      local calls = {}
+      local platform = setmetatable({
+        GetAuras = function(unit, filter)
+          calls[unit .. "|" .. filter] = (calls[unit .. "|" .. filter] or 0) + 1
+          return P.GetAuras(unit, filter)
+        end,
+      }, { __index = P })
+      local entries = { aura("buff", 1784), aura("buff", 5171), aura("buff", 2983), aura("debuff", 703) }
+      local cache = {}
+      local states = VM.Group({}, entries, { platform = platform, auraCache = cache })
+      assert.are.equal(1, calls["player|HELPFUL"])
+      assert.are.equal(1, calls["target|HARMFUL|PLAYER"])
+      assert.is_true(states[1].active)
+      -- A second group of the same refresh reuses the shared cache.
+      VM.Group({}, entries, { platform = platform, auraCache = cache })
+      assert.are.equal(1, calls["player|HELPFUL"])
+    end)
+
+    it("scans once per Group call when no cache is shared", function()
+      local count = 0
+      local platform = setmetatable({
+        GetAuras = function()
+          count = count + 1
+          return {}
+        end,
+      }, { __index = P })
+      VM.Group({}, { aura("buff", 1), aura("buff", 2), aura("buff", 3) }, { platform = platform })
+      assert.are.equal(1, count)
+    end)
+  end)
+
   describe("groups", function()
     local function group(missing)
       return { id = "g", kind = "buff", showWhenMissing = missing, entries = {} }

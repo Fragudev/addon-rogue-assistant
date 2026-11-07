@@ -116,14 +116,25 @@ local function applyAura(state, entry, aura, unit, platform)
   end
 end
 
-local function auraState(entry, platform)
+-- Every aura of a (unit, filter) pair, scanned once per refresh: `cache` is the per-refresh table.
+local function scan(platform, unit, filter, cache)
+  local key = unit .. "|" .. filter
+  local list = cache[key]
+  if not list then
+    list = platform.GetAuras(unit, filter)
+    cache[key] = list
+  end
+  return list
+end
+
+local function auraState(entry, platform, cache)
   local state = newState(entry, platform)
   local source = ns.Constants.TRACKER.AURA_SOURCE[entry.kind]
   local ids = idSet(entry)
   -- Entries matched by name use the name of the spell (or the typed name).
   local name = entry.byName and (state.name or entry.name) or nil
   local found, blind = nil, false
-  for _, aura in ipairs(platform.GetAuras(source.unit, source.filter)) do
+  for _, aura in ipairs(scan(platform, source.unit, source.filter, cache)) do
     if matches(aura, ids, name) then
       found = aura
       break
@@ -148,13 +159,14 @@ end
 
 -- Group ---------------------------------------------------------------------------------------------------------
 
--- The state of one entry.
+-- The state of one entry. deps: platform, auraCache (a table shared by every entry of one refresh; a private one is
+-- used when absent).
 function ViewModel.Entry(entry, deps)
   local platform = deps and deps.platform or ns.Platform
   if entry.kind == "cooldown" then
     return cooldownState(entry, platform)
   end
-  return auraState(entry, platform)
+  return auraState(entry, platform, deps and deps.auraCache or {})
 end
 
 -- The icons of a group, in order: `entries` are the visible ones (TrackerModel:VisibleEntries). An aura that is
@@ -162,6 +174,7 @@ end
 function ViewModel.Group(group, entries, deps)
   local layout = ns.TrackerModel.Layout(group)
   local states = {}
+  deps = { platform = deps and deps.platform, auraCache = deps and deps.auraCache or {} }
   for _, entry in ipairs(entries) do
     local state = ViewModel.Entry(entry, deps)
     if state.active == false and state.kind ~= "cooldown" then
