@@ -47,6 +47,7 @@ local function startForPlayer()
   ns.guid = guid
   ns.profile = profile
   ns.settings = ns.Settings.New(profile.settings)
+  ns.Startup.Run()
   ns.bus:Publish("addon.ready")
 end
 

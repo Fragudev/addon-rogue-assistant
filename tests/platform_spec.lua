@@ -278,6 +278,30 @@ describe("Platform", function()
     end)
   end)
 
+  describe("equipped items", function()
+    it("gives the item id, false for an empty slot and nil when unavailable", function()
+      assert.are.equal(1001, P.GetInventoryItemID("player", 16))
+      WowStub.state.equipment[17] = nil
+      assert.is_false(P.GetInventoryItemID("player", 17))
+      WowStub.Fail("GetInventoryItemID")
+      assert.is_nil(P.GetInventoryItemID("player", 16))
+      WowStub.Remove("GetInventoryItemID")
+      assert.is_nil(P.GetInventoryItemID("player", 16))
+      WowStub.Set("GetInventoryItemID", function()
+        return WowStub.Secret
+      end)
+      assert.is_nil(P.GetInventoryItemID("player", 16))
+    end)
+
+    it("reads the Shift key as a boolean or nil", function()
+      assert.is_false(P.IsShiftKeyDown())
+      WowStub.state.shift = true
+      assert.is_true(P.IsShiftKeyDown())
+      WowStub.Remove("IsShiftKeyDown")
+      assert.is_nil(P.IsShiftKeyDown())
+    end)
+  end)
+
   describe("bags and items", function()
     local function bag(size, items)
       items.size = size

@@ -15,7 +15,12 @@ Locales\enUS.lua
 Locales\esES.lua
 Core\EventBus.lua
 Core\Store.lua
+Core\Startup.lua
 Core\Probe.lua
 Domain\Settings.lua
+Data\Poisons.lua
+Domain\PoisonCatalog.lua
+Domain\WeaponState.lua
+Domain\PoisonAlerts.lua
 Core\Init.lua
 Commands\Slash.lua

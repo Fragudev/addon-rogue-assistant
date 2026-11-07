@@ -24,6 +24,7 @@ read_globals = {
   "GetSpellInfo",
   "GetSpellCooldown",
   "GetWeaponEnchantInfo",
+  "GetInventoryItemID",
   "GetItemInfo",
   "InCombatLockdown",
   "IsInInstance",

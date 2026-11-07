@@ -1,3 +1,4 @@
+-- luacheck: ignore 212/self
 -- Minimal WoW API stubs so addon logic can run under busted outside the client.
 -- Specs call WowStub.Reset() in before_each, then change the client with:
 --   WowStub.state.<field>      data the default fakes read (class, guid, bags, auras, ...)
@@ -25,21 +26,197 @@ local function newState()
     time = 1000,
     weapon = { false, 0, 0, 0, false, 0, 0, 0 },
     missingTemplates = {},
+    frames = {},
+    violations = {},
+    shift = false,
+    equipment = { [16] = 1001, [17] = 1002 },
   }
 end
 
-local function frameFactory()
-  local frame = { scripts = {}, events = {} }
+-- Regions (textures and font strings) remember what they were given. Any other method is a no-op.
+local function newRegion(kind)
+  local region = { kind = kind, shown = true }
+  function region:SetText(text)
+    self.text = text
+  end
+  function region:GetText()
+    return self.text
+  end
+  function region:SetTexture(texture)
+    self.texture = texture
+  end
+  function region:GetTexture()
+    return self.texture
+  end
+  function region:Show()
+    self.shown = true
+  end
+  function region:Hide()
+    self.shown = false
+  end
+  function region:SetShown(shown)
+    self.shown = shown and true or false
+  end
+  function region:IsShown()
+    return self.shown
+  end
+  return setmetatable(region, {
+    __index = function(_, name)
+      if type(name) == "string" and name:match("^%u") then
+        return function() end
+      end
+      return nil
+    end,
+  })
+end
+
+-- Frames record what the addon did to them. A frame made from a Secure* template is protected: changing its
+-- attributes, visibility, anchors or size while state.inCombat is true is refused and recorded in state.violations
+-- (the client blocks those calls the same way). Helpers for specs:
+--   frame.attributes / frame.refs / frame.wraps / frame.hooks / frame.scripts / frame.events / frame.clicks
+--   WowStub.Fire(frame, event, ...)     run the OnEvent script
+--   WowStub.Click(frame, button)        run the PostClick hooks (the secure action itself cannot be simulated)
+local function newFrame(frameType, name, parent, template)
+  local state = WowStub.state
+  local frame = {
+    frameType = frameType,
+    name = name,
+    parent = parent,
+    template = template,
+    scripts = {},
+    hooks = {},
+    events = {},
+    attributes = {},
+    refs = {},
+    wraps = {},
+    points = {},
+    shown = true,
+    protected = template ~= nil and template:find("Secure", 1, true) ~= nil,
+  }
+  state.frames[#state.frames + 1] = frame
+
+  local function guarded(op, apply)
+    return function(self, ...)
+      if self.protected and state.inCombat then
+        state.violations[#state.violations + 1] = { frame = self.name, op = op, args = { ... } }
+        return
+      end
+      return apply(self, ...)
+    end
+  end
+
   function frame:RegisterEvent(event)
     self.events[event] = true
   end
   function frame:UnregisterEvent(event)
     self.events[event] = nil
   end
-  function frame:SetScript(name, handler)
-    self.scripts[name] = handler
+  function frame:SetScript(script, handler)
+    self.scripts[script] = handler
   end
-  return frame
+  function frame:GetScript(script)
+    return self.scripts[script]
+  end
+  function frame:HookScript(script, handler)
+    self.hooks[script] = self.hooks[script] or {}
+    table.insert(self.hooks[script], handler)
+  end
+  function frame:RegisterForClicks(...)
+    self.clicks = { ... }
+  end
+  function frame:IsProtected()
+    return self.protected, self.protected
+  end
+  function frame:GetAttribute(attribute)
+    return self.attributes[attribute]
+  end
+  function frame:CreateTexture()
+    return newRegion("texture")
+  end
+  function frame:CreateFontString()
+    return newRegion("fontstring")
+  end
+  function frame:GetPoint()
+    local point = self.points[1]
+    if point then
+      return point[1], point[2], point[3], point[4], point[5]
+    end
+    return nil
+  end
+  function frame:IsShown()
+    return self.shown
+  end
+  function frame:StartMoving()
+    self.moving = true
+  end
+  function frame:StopMovingOrSizing()
+    self.moving = false
+  end
+  function frame:GetParent()
+    return self.parent
+  end
+
+  -- Secure handler methods (SecureHandlerBaseTemplate).
+  function frame:SetFrameRef(label, target)
+    self.refs[label] = target
+  end
+  function frame:WrapScript(target, script, preBody, postBody)
+    target.wraps[script] = { header = self, pre = preBody, post = postBody }
+  end
+
+  frame.SetAttribute = guarded("SetAttribute", function(self, attribute, value)
+    self.attributes[attribute] = value
+    self.attributeWrites = (self.attributeWrites or 0) + 1
+  end)
+  frame.Show = guarded("Show", function(self)
+    self.shown = true
+  end)
+  frame.Hide = guarded("Hide", function(self)
+    self.shown = false
+  end)
+  frame.SetShown = guarded("SetShown", function(self, shown)
+    self.shown = shown and true or false
+  end)
+  frame.SetPoint = guarded("SetPoint", function(self, ...)
+    table.insert(self.points, { ... })
+  end)
+  frame.ClearAllPoints = guarded("ClearAllPoints", function(self)
+    self.points = {}
+  end)
+  frame.SetSize = guarded("SetSize", function(self, width, height)
+    self.width, self.height = width, height
+  end)
+  frame.SetWidth = guarded("SetWidth", function(self, width)
+    self.width = width
+  end)
+  frame.SetHeight = guarded("SetHeight", function(self, height)
+    self.height = height
+  end)
+  frame.SetScale = guarded("SetScale", function(self, scale)
+    self.scale = scale
+  end)
+  frame.SetMovable = guarded("SetMovable", function(self, movable)
+    self.movable = movable
+  end)
+
+  return setmetatable(frame, {
+    __index = function(_, key)
+      if type(key) == "string" and key:match("^%u") then
+        return function() end
+      end
+      return nil
+    end,
+  })
+end
+
+function WowStub.Fire(frame, event, ...)
+  return frame.scripts.OnEvent(frame, event, ...)
+end
+
+function WowStub.Click(frame, button)
+  for _, hook in ipairs(frame.hooks.PostClick or {}) do
+    hook(frame, button, false)
+  end
 end
 
 local function defaults()
@@ -48,11 +225,17 @@ local function defaults()
     ["C_AddOns.GetAddOnMetadata"] = function()
       return "@project-version@"
     end,
-    ["CreateFrame"] = function(_, _, _, template)
+    ["CreateFrame"] = function(frameType, name, parent, template)
       if template and state.missingTemplates[template] then
         error("Couldn't find inherited node " .. template)
       end
-      return frameFactory()
+      return newFrame(frameType, name, parent, template)
+    end,
+    ["GetInventoryItemID"] = function(_, slot)
+      return state.equipment[slot]
+    end,
+    ["IsShiftKeyDown"] = function()
+      return state.shift
     end,
     ["GetBuildInfo"] = function()
       return "11.0.0", "00000", "Jan 1 2026", 16001

@@ -286,6 +286,23 @@ function Platform.GetWeaponEnchantInfo()
   return info
 end
 
+-- Item id of the item equipped in an inventory slot: the id (number) when something is equipped, false when the API
+-- answered and the slot is empty, nil when the API is missing, raises or answers a secret value.
+function Platform.GetInventoryItemID(unit, slot)
+  local status, packed = Platform.Invoke("GetInventoryItemID", unit, slot)
+  if status ~= "ok" then
+    return nil
+  end
+  local value = packed[1]
+  if value == SECRET then
+    return nil
+  end
+  if type(value) == "number" then
+    return value
+  end
+  return false
+end
+
 -- Bags and items ------------------------------------------------------------------------------------------------
 
 function Platform.GetContainerNumSlots(bag)
@@ -391,6 +408,11 @@ function Platform.GetTime()
   return first("number", "GetTime")
 end
 
+-- true while the Shift key is held, false when not, nil when unknown.
+function Platform.IsShiftKeyDown()
+  return first("boolean", "IsShiftKeyDown")
+end
+
 -- true when a frame can be created from the secure template `template` ("SecureActionButtonTemplate").
 function Platform.CanCreateSecureTemplate(template)
   if type(CreateFrame) ~= "function" then
@@ -419,6 +441,7 @@ Platform.REQUIRED_APIS = {
   { "C_UnitAuras.GetPlayerAuraBySpellID" },
   { "C_UnitAuras.GetAuraDataByIndex" },
   { "GetWeaponEnchantInfo" },
+  { "GetInventoryItemID" },
   { "C_Container.GetContainerNumSlots" },
   { "C_Container.GetContainerItemInfo" },
   { "C_Item.GetItemCount" },
