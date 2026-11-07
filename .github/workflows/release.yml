@@ -18,8 +18,7 @@ permissions:
 
 env:
   TAG: ${{ inputs.tag || github.ref_name }}
-  # Set to the CurseForge project ID before the first release.
-  CF_PROJECT_ID: "TBD"
+  CF_PROJECT_ID: "1789047"
 
 jobs:
   ci:
