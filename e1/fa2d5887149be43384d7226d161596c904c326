@@ -1,0 +1,29 @@
+.luacheckrc
+  s_7d15dada7060d6::t_012380148aed0e 8,22-38,54
+RogueAssistant/Core/Constants.lua
+  s_7d15dada7060d6::t_5ed14344cb31ac 1-27
+RogueAssistant/Core/Platform.lua
+  s_7d15dada7060d6::t_90a42a67a11da4 1-433
+tests/platform_spec.lua
+  s_7d15dada7060d6::t_c0b3bb63ab770e 1-409
+tests/stubs/wow_api.lua
+  s_7d15dada7060d6::t_cc5800ab633350 2-7,9-12,14,16-31,45-163,166-179,181-183
+tests/support/loader.lua
+  s_7d15dada7060d6::t_c638f969d539d8 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "e1fa2d5887149be43384d7226d161596c904c326",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
