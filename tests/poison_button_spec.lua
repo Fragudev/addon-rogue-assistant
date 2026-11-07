@@ -310,6 +310,33 @@ describe("PoisonButton", function()
       poison:Start()
     end)
 
+    it("applies changed settings out of combat", function()
+      settings:Set("poison.scale", 2)
+      settings:Set("poison.locked", false)
+      settings:Set("poison.position", { point = "TOP", relativePoint = "TOP", x = 5, y = -6 })
+      assert.is_true(poison:ApplySettings())
+      assert.are.equal(2, poison.button.scale)
+      assert.is_true(poison.button.movable)
+      assert.are.same({ "TOP", UIParent, "TOP", 5, -6 }, poison.button.points[1])
+    end)
+
+    it("defers changed settings in combat until PLAYER_REGEN_ENABLED", function()
+      WowStub.state.inCombat = true
+      settings:Set("poison.scale", 2)
+      assert.is_false(poison:ApplySettings())
+      assert.are.equal(1, poison.button.scale)
+      assert.are.same({}, WowStub.state.violations)
+      WowStub.state.inCombat = false
+      fire("PLAYER_REGEN_ENABLED")
+      assert.are.equal(2, poison.button.scale)
+      assert.is_false(poison.settingsDirty)
+    end)
+
+    it("ignores settings before the frames exist", function()
+      local fresh = ns.PoisonButton.New({ settings = settings, data = data, bus = bus, weaponState = weaponState })
+      assert.is_false(fresh:ApplySettings())
+    end)
+
     it("restores the saved position and scale, locked by default", function()
       local point = poison.button.points[1]
       assert.are.same({ "BOTTOM", UIParent, "BOTTOM", 0, 200 }, point)

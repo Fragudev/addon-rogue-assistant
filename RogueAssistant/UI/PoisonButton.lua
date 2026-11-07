@@ -209,6 +209,24 @@ function PoisonButton:SetLocked(locked)
   return true
 end
 
+-- Applies position, scale and lock from the settings (the options panel calls it after a change). A protected frame
+-- cannot be configured in combat, so it only notes the change and PLAYER_REGEN_ENABLED applies it. Returns true when
+-- the frame was updated now.
+function PoisonButton:ApplySettings()
+  if not self.built then
+    return false
+  end
+  if self:InCombat() then
+    self.settingsDirty = true
+    return false
+  end
+  self:ApplyPosition()
+  self.button:SetScale(self.settings:Get("poison.scale"))
+  self:ApplyLock()
+  self.settingsDirty = false
+  return true
+end
+
 function PoisonButton:OnDragStart()
   if self.settings:Get("poison.locked") or self:InCombat() then
     return
@@ -390,6 +408,9 @@ function PoisonButton:OnEvent(event, unit)
     self:Rebuild()
     self:RefreshStatus()
   elseif event == "PLAYER_REGEN_ENABLED" then
+    if self.settingsDirty then
+      self:ApplySettings()
+    end
     if self.dirty then
       self:Rebuild()
     end

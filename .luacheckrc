@@ -37,6 +37,7 @@ read_globals = {
   "C_SpellBook",
   "C_Secrets",
   "C_CooldownViewer",
+  "Settings",
   -- UI kit.
   "UIParent",
   "UISpecialFrames",

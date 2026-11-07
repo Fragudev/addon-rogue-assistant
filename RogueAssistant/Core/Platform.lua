@@ -488,6 +488,34 @@ function Platform.TryRegisterEvent(frame, event)
   return (pcall(frame.RegisterEvent, frame, event))
 end
 
+-- Settings UI -----------------------------------------------------------------------------------------------------
+
+-- Registers `frame` as a canvas panel named `name` in the game's Settings window. Returns the category, or nil when
+-- the client has no Settings API (the caller then shows the frame on its own).
+function Platform.RegisterSettingsCanvas(frame, name)
+  local category = first("table", "Settings.RegisterCanvasLayoutCategory", frame, name)
+  if not category or not Platform.Has("Settings.RegisterAddOnCategory") then
+    return nil
+  end
+  if Platform.Invoke("Settings.RegisterAddOnCategory", category) ~= "ok" then
+    return nil
+  end
+  return category
+end
+
+-- Opens the Settings window on a category from RegisterSettingsCanvas. false when the client refuses.
+function Platform.OpenSettingsCategory(category)
+  local id = category
+  if type(category) == "table" and type(category.GetID) == "function" then
+    local ok, value = pcall(category.GetID, category)
+    id = ok and value or nil
+  end
+  if id == nil then
+    return false
+  end
+  return Platform.Invoke("Settings.OpenToCategory", id) == "ok"
+end
+
 -- Every client API the addon relies on. Each entry is a group of alternatives: the group is satisfied when any member
 -- exists. /ras debug selftest walks this list.
 Platform.REQUIRED_APIS = {

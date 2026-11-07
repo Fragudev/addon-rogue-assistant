@@ -66,6 +66,9 @@ local function newState()
     auraDurations = {},
     auraCounts = {},
     cooldownObjectFails = false,
+    -- Settings UI: categories registered with Settings.RegisterCanvasLayoutCategory, and the ids opened.
+    categories = {},
+    opened = {},
   }
 end
 
@@ -402,6 +405,20 @@ local function defaults()
     ["GetTime"] = function()
       return state.time
     end,
+    ["Settings.RegisterCanvasLayoutCategory"] = function(frame, name)
+      local category = { frame = frame, name = name, id = #state.categories + 1 }
+      function category:GetID()
+        return self.id
+      end
+      state.categories[#state.categories + 1] = category
+      return category
+    end,
+    ["Settings.RegisterAddOnCategory"] = function(category)
+      category.registered = true
+    end,
+    ["Settings.OpenToCategory"] = function(id)
+      state.opened[#state.opened + 1] = id
+    end,
   }
 end
 
@@ -443,7 +460,7 @@ function WowStub.Reset()
     setPath(path, nil)
   end
   _G.C_Spell, _G.C_UnitAuras, _G.C_Container, _G.C_Item, _G.C_SpellBook, _G.C_AddOns = nil, nil, nil, nil, nil, nil
-  _G.C_Secrets, _G.C_CooldownViewer = nil, nil
+  _G.C_Secrets, _G.C_CooldownViewer, _G.Settings = nil, nil, nil
   installed = {}
   WowStub.state = newState()
   for path, fn in pairs(defaults()) do
