@@ -235,10 +235,17 @@ function PoisonButton:OnDragStart()
   self.moving = true
 end
 
+-- Ends a drag: stops the move and saves the position. Never in combat (the frame is protected): a drag that ends
+-- then is finished on PLAYER_REGEN_ENABLED.
 function PoisonButton:OnDragStop()
   if not self.moving then
     return
   end
+  if self:InCombat() then
+    self.dragPending = true
+    return
+  end
+  self.dragPending = false
   self.moving = false
   self.button:StopMovingOrSizing()
   local point, _, relativePoint, x, y = self.button:GetPoint()
@@ -408,6 +415,9 @@ function PoisonButton:OnEvent(event, unit)
     self:Rebuild()
     self:RefreshStatus()
   elseif event == "PLAYER_REGEN_ENABLED" then
+    if self.dragPending then
+      self:OnDragStop()
+    end
     if self.settingsDirty then
       self:ApplySettings()
     end

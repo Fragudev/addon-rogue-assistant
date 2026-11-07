@@ -391,6 +391,25 @@ describe("PoisonButton", function()
       assert.are.equal(200, settings:Get("poison.position").y)
     end)
 
+    it("defers the end of a drag that finishes in combat until combat ends", function()
+      bus:Publish("layout.unlock")
+      poison.button.scripts.OnDragStart(poison.button)
+      WowStub.state.inCombat = true
+      poison.button.points = { { "TOPLEFT", UIParent, "BOTTOMLEFT", 10, 20 } }
+      poison.button.scripts.OnDragStop(poison.button)
+      assert.is_true(poison.button.moving)
+      assert.are.equal(200, settings:Get("poison.position").y)
+      assert.are.same({}, WowStub.state.violations)
+      WowStub.state.inCombat = false
+      WowStub.Fire(poison.driver, "PLAYER_REGEN_ENABLED")
+      assert.is_false(poison.button.moving)
+      assert.are.same(
+        { point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 10, y = 20 },
+        settings:Get("poison.position")
+      )
+      assert.is_false(poison.dragPending)
+    end)
+
     it("keeps the position when the frame has no anchor after a drag", function()
       bus:Publish("layout.unlock")
       poison.button.scripts.OnDragStart(poison.button)
