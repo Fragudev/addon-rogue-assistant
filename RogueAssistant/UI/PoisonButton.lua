@@ -1,8 +1,9 @@
 -- luacheck: ignore 212/self
 local _, ns = ...
 
--- The poison button: a movable main button with the main hand poison icon and two status lines, and a flyout with one
--- secure button per poison rank in the bags.
+-- The poison button: a movable main button with the main hand poison icon, a flyout with one secure button per poison
+-- rank in the bags, and the two weapon status lines, which live in a frame of their own (plain, not secure) so they
+-- can be moved and hidden on their own.
 --
 -- Secure structure (see docs/API_NOTES.md):
 --   header   SecureHandlerBaseTemplate frame, the "control" of the snippets below. It holds the frame ref "flyout".
@@ -13,13 +14,25 @@ local _, ns = ...
 --   rows     SecureActionButtonTemplate, children of the flyout. Left click: type1=item on slot 16; right
 --            click: type2=item on slot 17. Their OnClick is wrapped to hide the flyout after the action.
 -- No attribute, anchor or size of a protected frame changes in combat: Rebuild marks itself dirty and runs again on
--- PLAYER_REGEN_ENABLED.
+-- PLAYER_REGEN_ENABLED. The same goes for the flyout direction, the status frame (it is anchored to the button until it
+-- is moved) and every other change made by ApplySettings.
 local PoisonButton = {}
 PoisonButton.__index = PoisonButton
 
 local BUTTON_SIZE = 40
 local ROW_HEIGHT = 28
 local ROW_WIDTH = 190
+local STATUS_WIDTH = 150
+local STATUS_HEIGHT = 30
+
+-- Where the flyout sits next to the button for each poison.flyoutDirection: the flyout point, the button point, and
+-- the offset. The rows of an UP, LEFT or RIGHT flyout pile up from its bottom; a DOWN flyout hangs from its top.
+local FLYOUT_ANCHORS = {
+  UP = { "BOTTOMLEFT", "TOPLEFT", 0, 4 },
+  DOWN = { "TOPLEFT", "BOTTOMLEFT", 0, -4 },
+  LEFT = { "BOTTOMRIGHT", "BOTTOMLEFT", -4, 0 },
+  RIGHT = { "BOTTOMLEFT", "BOTTOMRIGHT", 4, 0 },
+}
 
 local TOGGLE_SNIPPET = [[
   if IsShiftKeyDown() then
@@ -102,20 +115,44 @@ function PoisonButton:CreateButton()
   button.moveOverlay:SetAllPoints(button)
   button.moveOverlay:SetColorTexture(1, 0.96, 0.41, 0.35)
   button.moveOverlay:Hide()
-  button.mhLine = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  button.mhLine:SetPoint("TOP", button, "BOTTOM", 0, -2)
-  button.ohLine = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  button.ohLine:SetPoint("TOP", button.mhLine, "BOTTOM", 0, -1)
+  button.moveLabel = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  button.moveLabel:SetPoint("BOTTOM", button, "TOP", 0, 2)
+  button.moveLabel:SetText(self.L["layout.name.poison"])
+  button.moveLabel:Hide()
   return button
+end
+
+-- The weapon status lines: a plain frame, anchored under the button until it is moved.
+function PoisonButton:CreateStatus()
+  local status = CreateFrame("Frame", "RogueAssistantWeaponStatus", UIParent)
+  status:SetSize(STATUS_WIDTH, STATUS_HEIGHT)
+  status:SetFrameStrata("MEDIUM")
+  status:SetClampedToScreen(true)
+  status:SetMovable(true)
+  status.mhLine = status:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  status.mhLine:SetPoint("TOP", status, "TOP", 0, 0)
+  status.ohLine = status:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  status.ohLine:SetPoint("TOP", status.mhLine, "BOTTOM", 0, -1)
+  status.handle = ns.MoveHandle.Create(status, {
+    label = self.L["layout.name.status"],
+    place = function(handle, target)
+      handle:SetPoint("TOPLEFT", target, "BOTTOMLEFT", 0, -2)
+    end,
+    onDragStart = function()
+      self:OnStatusDragStart()
+    end,
+    onDragStop = function()
+      self:OnStatusDragStop()
+    end,
+  })
+  return status
 end
 
 function PoisonButton:CreateFlyout(button)
   local flyout = CreateFrame("Frame", "RogueAssistantPoisonFlyout", button, "SecureHandlerBaseTemplate")
   flyout:SetFrameStrata("DIALOG")
   flyout:SetSize(ROW_WIDTH, ROW_HEIGHT)
-  flyout:SetPoint("BOTTOMLEFT", button, "TOPLEFT", 0, 4)
   flyout.empty = flyout:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  flyout.empty:SetPoint("BOTTOMLEFT", flyout, "BOTTOMLEFT", 4, 4)
   flyout.empty:SetText(self.L["poison.empty"])
   flyout:Hide()
   return flyout
@@ -158,6 +195,8 @@ function PoisonButton:Build()
   self.header = CreateFrame("Frame", "RogueAssistantPoisonHeader", UIParent, "SecureHandlerBaseTemplate")
   self.button = self:CreateButton()
   self.flyout = self:CreateFlyout(self.button)
+  self.status = self:CreateStatus()
+  self:ApplyFlyoutDirection()
   self.header:SetFrameRef("flyout", self.flyout)
   self.header:WrapScript(self.button, "OnClick", TOGGLE_SNIPPET)
 
@@ -187,6 +226,10 @@ end
 
 -- Position and lock ----------------------------------------------------------------------------------------------
 
+local function samePosition(a, b)
+  return a.point == b.point and a.relativePoint == b.relativePoint and a.x == b.x and a.y == b.y
+end
+
 function PoisonButton:ApplyPosition()
   local position = self.settings:Get("poison.position")
   self.button:ClearAllPoints()
@@ -197,6 +240,59 @@ function PoisonButton:ApplyLock()
   local locked = self.settings:Get("poison.locked")
   self.button:SetMovable(not locked)
   self.button.moveOverlay:SetShown(not locked)
+  self.button.moveLabel:SetShown(not locked)
+  self:ApplyStatus()
+end
+
+-- Places, scales, shows and unlocks the weapon status frame. While the status position is still the default the
+-- frame follows the button; once it has been moved it keeps its own place. Unlocked, it is always shown, so it can be
+-- found even when the lines are switched off.
+function PoisonButton:ApplyStatus()
+  local status = self.status
+  if not self.statusMoving then
+    local position = self.settings:Get("poison.statusPosition")
+    status:ClearAllPoints()
+    if samePosition(position, ns.Settings.Default("poison.statusPosition")) then
+      status:SetPoint("TOP", self.button, "BOTTOM", 0, -2)
+    else
+      status:SetPoint(position.point, UIParent, position.relativePoint, position.x, position.y)
+    end
+  end
+  status:SetScale(self.settings:Get("poison.scale"))
+  local unlocked = not self.settings:Get("poison.locked")
+  status:SetShown(unlocked or self.settings:Get("poison.statusShown"))
+  ns.MoveHandle.SetShown(status, status.handle, unlocked)
+end
+
+function PoisonButton:FlyoutDirection()
+  return self.settings:Get("poison.flyoutDirection")
+end
+
+-- Puts one row at its place in the flyout.
+function PoisonButton:PlaceRow(row, index)
+  row:ClearAllPoints()
+  if self:FlyoutDirection() == "DOWN" then
+    row:SetPoint("TOPLEFT", self.flyout, "TOPLEFT", 0, -(index - 1) * ROW_HEIGHT)
+  else
+    row:SetPoint("BOTTOMLEFT", self.flyout, "BOTTOMLEFT", 0, (index - 1) * ROW_HEIGHT)
+  end
+end
+
+-- Anchors the flyout to the side of the button that poison.flyoutDirection names, and lays the rows out to match.
+-- The flyout is part of the secure button, so this only runs out of combat.
+function PoisonButton:ApplyFlyoutDirection()
+  local anchor = FLYOUT_ANCHORS[self:FlyoutDirection()]
+  self.flyout:ClearAllPoints()
+  self.flyout:SetPoint(anchor[1], self.button, anchor[2], anchor[3], anchor[4])
+  self.flyout.empty:ClearAllPoints()
+  if self:FlyoutDirection() == "DOWN" then
+    self.flyout.empty:SetPoint("TOPLEFT", self.flyout, "TOPLEFT", 4, -4)
+  else
+    self.flyout.empty:SetPoint("BOTTOMLEFT", self.flyout, "BOTTOMLEFT", 4, 4)
+  end
+  for index, row in ipairs(self.rows) do
+    self:PlaceRow(row, index)
+  end
 end
 
 -- Locks or unlocks the button. Not in combat (a protected frame cannot be configured then): returns false.
@@ -222,6 +318,7 @@ function PoisonButton:ApplySettings()
   end
   self:ApplyPosition()
   self.button:SetScale(self.settings:Get("poison.scale"))
+  self:ApplyFlyoutDirection()
   self:ApplyLock()
   self.settingsDirty = false
   return true
@@ -252,6 +349,34 @@ function PoisonButton:OnDragStop()
   if point then
     self.settings:Set("poison.position", { point = point, relativePoint = relativePoint, x = x, y = y })
   end
+end
+
+-- The weapon status frame moves like the button: never in combat (it hangs from the protected button until it is
+-- moved), and a drag that ends then is finished on PLAYER_REGEN_ENABLED.
+function PoisonButton:OnStatusDragStart()
+  if self.settings:Get("poison.locked") or self:InCombat() then
+    return
+  end
+  self.status:StartMoving()
+  self.statusMoving = true
+end
+
+function PoisonButton:OnStatusDragStop()
+  if not self.statusMoving then
+    return
+  end
+  if self:InCombat() then
+    self.statusDragPending = true
+    return
+  end
+  self.statusDragPending = false
+  self.statusMoving = false
+  self.status:StopMovingOrSizing()
+  local point, _, relativePoint, x, y = self.status:GetPoint()
+  if point then
+    self.settings:Set("poison.statusPosition", { point = point, relativePoint = relativePoint, x = x, y = y })
+  end
+  self:ApplyStatus()
 end
 
 -- Tooltips -------------------------------------------------------------------------------------------------------
@@ -301,8 +426,7 @@ function PoisonButton:ConfigureRow(index, entry)
   row.itemID = entry.itemID
   row.label:SetText(entry.text)
   row.icon:SetTexture(entry.icon or ns.Constants.LOGO_TEXTURE)
-  row:ClearAllPoints()
-  row:SetPoint("BOTTOMLEFT", self.flyout, "BOTTOMLEFT", 0, (index - 1) * ROW_HEIGHT)
+  self:PlaceRow(row, index)
   row:Show()
 end
 
@@ -387,7 +511,7 @@ end
 
 -- Status ---------------------------------------------------------------------------------------------------------
 
--- Updates the icon and the two lines. Plain regions of a protected frame may change in combat.
+-- Updates the icon and the two lines. Plain regions and plain frames may change in combat.
 function PoisonButton:RefreshStatus()
   if not self.built then
     return
@@ -395,8 +519,8 @@ function PoisonButton:RefreshStatus()
   local state = self.weaponState:Read()
   local deps = self:ViewDeps()
   local status = self.viewModel.Status(state, deps)
-  self.button.mhLine:SetText(status.mh.text)
-  self.button.ohLine:SetText(status.oh.text)
+  self.status.mhLine:SetText(status.mh.text)
+  self.status.ohLine:SetText(status.oh.text)
   self.button.icon:SetTexture(self.viewModel.MainIcon(state, deps))
 end
 
@@ -417,6 +541,9 @@ function PoisonButton:OnEvent(event, unit)
   elseif event == "PLAYER_REGEN_ENABLED" then
     if self.dragPending then
       self:OnDragStop()
+    end
+    if self.statusDragPending then
+      self:OnStatusDragStop()
     end
     if self.settingsDirty then
       self:ApplySettings()
