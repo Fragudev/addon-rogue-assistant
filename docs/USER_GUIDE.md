@@ -57,6 +57,9 @@ Out of combat, the addon prints one chat line and shows a short banner at the to
 It checks when you **enter an instance**, on a **ready check** and when **combat ends**; each trigger has its own
 switch. A reminder is shown once until the problem is fixed. A threshold of `0` turns that rule off.
 
+Stock reminders start once you have applied a poison through the button: the addon learns which poison is on the
+weapon from that.
+
 ## The tracker
 
 Three groups, each a row (or column) of icons:

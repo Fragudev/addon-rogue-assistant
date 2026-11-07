@@ -24,7 +24,8 @@ One button, every poison.
 - Under the button you see the minutes left (and the charges, when the game reports them) of each weapon's poison.
 - **Reminders** out of combat, as a chat line and a short banner: a weapon has no poison, a poison is about to expire,
   charges run low or your stock in the bags is getting short. You get them when you enter an instance, on a ready
-  check and when combat ends, and each one has its own switch and threshold.
+  check and when combat ends, and each one has its own switch and threshold. Stock reminders start once you have
+  applied a poison through the button (the addon learns which poison is on the weapon).
 
 The list works in combat too. It is rebuilt out of combat, so a poison you pick up during a fight shows up when the
 fight ends.

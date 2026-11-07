@@ -23,7 +23,8 @@
   poison used on that hand. Under the button you see how many minutes (and charges) each weapon's poison has left.
 - **Poison reminders.** A chat line and a short on-screen banner, out of combat, when a weapon has no poison, a poison
   is about to expire, its charges run low or the stock in your bags is getting short. Each trigger (entering an
-  instance, a ready check, the end of combat) has its own switch.
+  instance, a ready check, the end of combat) has its own switch. Stock reminders start once you have applied a poison
+  through the button (the addon learns which poison is on the weapon).
 - **Tracker.** Three groups of icons in the style of Blizzard's Cooldown Manager: your **essential cooldowns**, your
   **buffs** and your **debuffs on the target**. Only what your character knows is shown. Each group can show icons or
   bars, and you can add or remove any spell by id or name.

@@ -17,7 +17,7 @@ This can be checked in the source: the addon never calls `SendAddonMessage`, `C_
 
 | Data | Where it comes from |
 |---|---|
-| For each rogue you log in with: its GUID, name, class and when it was last seen | read from the game |
+| For each rogue you log in with: its GUID (the key of its settings), class and when it was last seen. The character name is not stored | read from the game |
 | Your settings: the position, scale and lock of the poison button, the alert thresholds and triggers, and the tracker groups (their spells, layout and positions) | you |
 | The last poison used on each hand, and which weapon enchant belongs to which poison item | learned by the addon when you apply a poison with it |
 | Diagnostics, bounded (see below) | the `/ras debug` commands and internal start-up errors |
@@ -31,8 +31,8 @@ Stored in the same file, under `RogueAssistantDB.debug`:
 - `log`: the last **50** internal messages (for example "disabled: class token WARRIOR"), each at most 240 characters.
 - `lastProbe`: the lines of the last `/ras debug probe`, at most **200** lines.
 
-The probe lists which game APIs exist and what they return, which can include your own character's name and GUID. It
-holds no chat and no other players' names.
+The probe lists which game APIs exist and what they return, which can include item and spell names from your bags,
+spellbook and auras. It holds no chat, no character names and no other players' names.
 
 ## Where the file is
 
@@ -40,7 +40,7 @@ holds no chat and no other players' names.
 World of Warcraft/<forever client folder>/WTF/Account/<account>/SavedVariables/RogueAssistant.lua
 ```
 
-The game writes it on `/reload` and on logout. It contains your **character GUIDs and names**, so think before
+The game writes it on `/reload` and on logout. It contains your **character GUIDs** (not names), so think before
 attaching it to a public issue; the output of `/ras debug selftest` is usually enough.
 
 ## Taking data back
