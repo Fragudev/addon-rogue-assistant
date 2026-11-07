@@ -1,0 +1,37 @@
+RogueAssistant/Commands/Slash.lua
+  s_7d15dada7060d6::t_4c36ae27064c34 86-90
+RogueAssistant/Locales/enUS.lua
+  s_7d15dada7060d6::t_65a411cca1aa09 9,62-110
+RogueAssistant/Locales/esES.lua
+  s_7d15dada7060d6::t_7b9e5628730cfc 11,65-113
+RogueAssistant/RogueAssistant.toc
+  s_7d15dada7060d6::t_2e9ba491f0d129 32-33
+RogueAssistant/UI/Options.lua
+  s_7d15dada7060d6::t_9c839d89b053a6 1-452
+RogueAssistant/UI/ViewModelOptions.lua
+  s_7d15dada7060d6::t_57720a31a0fa4c 1-245
+tests/options_spec.lua
+  s_7d15dada7060d6::t_2c6973d99335d5 1-262
+tests/slash_spec.lua
+  s_7d15dada7060d6::t_2b4b0679469405 32-49,51-63
+tests/stubs/wow_api.lua
+  s_7d15dada7060d6::t_b6139b6386bd17 200-214
+tests/viewmodel_options_spec.lua
+  s_7d15dada7060d6::t_e9bc2f9452b07d 1-233
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d4f19054947c7185fb26a1dcbaa1add560755e41",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
