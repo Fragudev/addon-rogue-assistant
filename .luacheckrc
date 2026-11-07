@@ -5,6 +5,7 @@ max_line_length = 120
 globals = {
   "RogueAssistantDB",
   "SLASH_RAS1",
+  "SLASH_RAS2",
   "SlashCmdList",
 }
 
@@ -18,6 +19,23 @@ read_globals = {
   "hooksecurefunc",
   "issecretvalue",
   "UnitClass",
+  "UnitGUID",
+  "IsPlayerSpell",
+  "GetSpellInfo",
+  "GetSpellCooldown",
+  "GetWeaponEnchantInfo",
+  "GetItemInfo",
+  "InCombatLockdown",
+  "IsInInstance",
+  "GetTime",
+  "Enum",
+  "C_Spell",
+  "C_UnitAuras",
+  "C_Container",
+  "C_Item",
+  "C_SpellBook",
+  "C_Secrets",
+  "C_CooldownViewer",
   -- UI kit.
   "UIParent",
   "UISpecialFrames",
@@ -33,5 +51,5 @@ read_globals = {
 
 files["tests/"] = {
   std = "+busted",
-  globals = { "_G" },
+  globals = { "_G", "WowStub" },
 }
