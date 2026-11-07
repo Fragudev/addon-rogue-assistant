@@ -14,6 +14,7 @@ local HANDLE_HEIGHT = 16
 local HANDLE_WIDTH = 140
 local DIM_ALPHA = 0.4
 local HIDDEN_ALPHA = 0.6
+local BAR_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 
 local EVENTS = {
   "SPELL_UPDATE_COOLDOWN",
@@ -64,12 +65,11 @@ function TrackerFrames:CreateSlot(parent)
   slot.bar = CreateFrame("StatusBar", nil, slot)
   slot.bar:SetMinMaxValues(0, 1)
   slot.bar:Hide()
-  slot.barFill = slot.bar:CreateTexture(nil, "ARTWORK")
-  slot.barFill:SetColorTexture(0.9, 0.8, 0.2, 0.9)
-  slot.bar:SetStatusBarTexture(slot.barFill)
+  slot.bar:SetStatusBarTexture(BAR_TEXTURE)
+  slot.bar:SetStatusBarColor(0.9, 0.8, 0.2, 0.9)
   slot.barText = slot.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   slot.barText:SetPoint("RIGHT", slot.bar, "RIGHT", -2, 0)
-  slot:EnableMouse(true)
+  slot:EnableMouse(self.unlocked)
   slot:SetScript("OnEnter", function()
     self:ShowTooltip(slot)
   end)
@@ -221,7 +221,7 @@ function TrackerFrames:ApplyGroup(group)
   local record = self:Container(group)
   local layout = ns.TrackerModel.Layout(group)
   local entries = self.model:VisibleEntries(group.id)
-  local states = self.viewModel.Group(group, entries, { platform = self.platform })
+  local states = self.viewModel.Group(group, entries, { platform = self.platform, auraCache = self.auraCache })
 
   local size = layout.iconSize
   local barMode = layout.mode == "bars"
@@ -239,7 +239,6 @@ function TrackerFrames:ApplyGroup(group)
     slot.cooldown:SetAllPoints(slot.icon)
     slot.bar:SetPoint("TOPLEFT", slot, "TOPLEFT", size + 2, 0)
     slot.bar:SetSize(width - size - 2, size)
-    slot.barFill:SetAllPoints(slot.bar)
     slot:ClearAllPoints()
     slot:SetPoint("TOPLEFT", record.container, "TOPLEFT", plan.slots[index].x, plan.slots[index].y)
     self:Paint(slot, state, layout)
@@ -270,6 +269,8 @@ end
 function TrackerFrames:Refresh()
   self.refreshes = self.refreshes + 1
   self.dirty = false
+  -- One aura scan per (unit, filter) for the whole redraw, shared by every group.
+  self.auraCache = {}
   for _, group in ipairs(self.model:Groups()) do
     self:ApplyGroup(group)
   end
@@ -287,6 +288,10 @@ function TrackerFrames:SetUnlocked(unlocked)
   self.unlocked = unlocked and true or false
   for _, record in pairs(self.groups) do
     record.handle:SetShown(self.unlocked)
+    -- Icons only take the mouse while unlocked, so they never swallow clicks meant for the world.
+    for _, slot in ipairs(record.slots) do
+      slot:EnableMouse(self.unlocked)
+    end
   end
   self:Refresh()
 end
@@ -340,6 +345,19 @@ function TrackerFrames:OnUpdate(elapsed)
   end
 end
 
+-- UNIT_AURA only for the units the tracker reads. Falls back to the plain event (OnEvent filters the unit) when the
+-- client has no RegisterUnitEvent or refuses it.
+function TrackerFrames:RegisterAuraEvent()
+  local driver = self.driver
+  if
+    type(driver.RegisterUnitEvent) == "function"
+    and pcall(driver.RegisterUnitEvent, driver, "UNIT_AURA", "player", "target")
+  then
+    return
+  end
+  self.platform.TryRegisterEvent(driver, "UNIT_AURA")
+end
+
 function TrackerFrames:CreateDriver()
   self.driver = CreateFrame("Frame")
   self.driver:SetScript("OnEvent", function(_, event, ...)
@@ -349,7 +367,11 @@ function TrackerFrames:CreateDriver()
     self:OnUpdate(elapsed)
   end)
   for _, event in ipairs(EVENTS) do
-    self.platform.TryRegisterEvent(self.driver, event)
+    if event == "UNIT_AURA" then
+      self:RegisterAuraEvent()
+    else
+      self.platform.TryRegisterEvent(self.driver, event)
+    end
   end
 end
 

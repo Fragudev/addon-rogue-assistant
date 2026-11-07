@@ -56,6 +56,26 @@ describe("TrackerFrames", function()
       assert.is_nil(frames.driver.events.COMBAT_LOG_EVENT_UNFILTERED)
     end)
 
+    it("listens to UNIT_AURA for the player and the target only", function()
+      frames:Start()
+      assert.are.same({ "player", "target" }, frames.driver.unitEvents.UNIT_AURA)
+    end)
+
+    it("falls back to the plain UNIT_AURA event when the unit event is refused", function()
+      local create = CreateFrame
+      WowStub.Set("CreateFrame", function(...)
+        local created = create(...)
+        function created:RegisterUnitEvent()
+          error("refused")
+        end
+        return created
+      end)
+      frames:Start()
+      assert.is_true(frames.driver.events.UNIT_AURA)
+      assert.is_nil(frames.driver.unitEvents)
+      WowStub.Fire(frames.driver, "UNIT_AURA", "focus")
+    end)
+
     it("registers through the startup list and respects ns.disabled", function()
       ns.settings, ns.bus = settings, bus
       ns.disabled = "not_rogue"
@@ -72,6 +92,44 @@ describe("TrackerFrames", function()
       WowStub.state.inCombat = true
       frames:Start()
       assert.is_true(frames.inCombat)
+    end)
+  end)
+
+  describe("aura scans", function()
+    it("scans each unit and filter once per refresh across all groups", function()
+      frames:Start()
+      local counts = {}
+      local real = frames.platform
+      frames.platform = setmetatable({
+        GetAuras = function(unit, filter)
+          local key = unit .. "|" .. filter
+          counts[key] = (counts[key] or 0) + 1
+          return real.GetAuras(unit, filter)
+        end,
+      }, { __index = real })
+      frames:Refresh()
+      for key, count in pairs(counts) do
+        assert.are.equal(1, count, key)
+      end
+    end)
+  end)
+
+  describe("mouse", function()
+    it("lets clicks through the icons while locked and takes them while unlocked", function()
+      frames:Start()
+      local slot = slotOf("essentials")
+      assert.is_false(slot.mouseEnabled)
+      frames:SetUnlocked(true)
+      assert.is_true(slot.mouseEnabled)
+      frames:SetUnlocked(false)
+      assert.is_false(slot.mouseEnabled)
+    end)
+
+    it("uses a managed status bar texture", function()
+      frames:Start()
+      local slot = slotOf("essentials")
+      assert.is_string(slot.bar.statusBarTexture)
+      assert.is_nil(slot.barFill)
     end)
   end)
 
