@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#1f2a24"/>
+      <stop offset="1" stop-color="#0a0e0c"/>
+    </radialGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8a949c"/>
+      <stop offset="0.5" stop-color="#eef2f5"/>
+      <stop offset="1" stop-color="#9aa4ac"/>
+    </linearGradient>
+    <linearGradient id="venom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b6ff5c"/>
+      <stop offset="1" stop-color="#2f9e1f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3d27a"/>
+      <stop offset="1" stop-color="#a87a22"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <g id="dagger">
+      <!-- blade -->
+      <path d="M512 90 L548 250 L548 600 L476 600 L476 250 Z" fill="url(#blade)" stroke="#2b3238" stroke-width="8"/>
+      <path d="M512 110 L512 596" stroke="#6f7a83" stroke-width="5"/>
+      <!-- venom on the edge -->
+      <path d="M476 250 L476 430 Q488 470 476 520 L476 600 L500 600 L500 250 Z" fill="url(#venom)" opacity="0.85"/>
+      <!-- guard -->
+      <rect x="400" y="596" width="224" height="44" rx="18" fill="url(#gold)" stroke="#3a2a0a" stroke-width="8"/>
+      <!-- grip -->
+      <rect x="486" y="640" width="52" height="150" rx="10" fill="#3b2418" stroke="#1a0f09" stroke-width="8"/>
+      <path d="M486 670 L538 690 M486 710 L538 730 M486 750 L538 770" stroke="#6a4430" stroke-width="8"/>
+      <!-- pommel -->
+      <circle cx="512" cy="818" r="34" fill="url(#gold)" stroke="#3a2a0a" stroke-width="8"/>
+    </g>
+  </defs>
+  <rect width="1024" height="1024" rx="120" fill="url(#bg)"/>
+  <rect x="24" y="24" width="976" height="976" rx="100" fill="none" stroke="#3d6b2e" stroke-width="12" opacity="0.8"/>
+  <use href="#dagger" transform="rotate(-38 512 512) translate(0 -10)"/>
+  <use href="#dagger" transform="rotate(38 512 512) translate(0 -10)"/>
+  <!-- poison drop -->
+  <g filter="url(#glow)">
+    <path d="M512 330 C 560 410 600 460 600 515 A 88 88 0 0 1 424 515 C 424 460 464 410 512 330 Z"
+          fill="url(#venom)" stroke="#0f3a0a" stroke-width="10"/>
+    <ellipse cx="482" cy="500" rx="16" ry="30" fill="#e9ffd0" opacity="0.7"/>
+  </g>
+</svg>
