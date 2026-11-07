@@ -95,12 +95,24 @@ function Slash.Dispatch(message)
   end
 end
 
-local function later()
-  say(ns.L["cmd.later"])
+-- /ras unlock and /ras lock publish a layout event; every movable frame (the poison button, later the tracker)
+-- listens to it. A protected frame cannot be configured in combat, so nothing is published then.
+local function layoutCommand(event, doneKey)
+  return function()
+    local L = ns.L
+    if ns.disabled or not ns.bus then
+      say(L["layout.unavailable"])
+    elseif ns.Platform.InCombatLockdown() == true then
+      say(L["layout.combat"])
+    else
+      ns.bus:Publish(event)
+      say(L[doneKey])
+    end
+  end
 end
 
-Slash.Register("unlock", later, "cmd.help.unlock")
-Slash.Register("lock", later, "cmd.help.lock")
+Slash.Register("unlock", layoutCommand("layout.unlock", "layout.unlocked"), "cmd.help.unlock")
+Slash.Register("lock", layoutCommand("layout.lock", "layout.locked"), "cmd.help.lock")
 
 Slash.Register("debug", function(rest)
   local name, args = splitFirst(rest)

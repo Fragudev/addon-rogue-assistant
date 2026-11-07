@@ -66,6 +66,26 @@ describe("Init", function()
     assert.are.equal(1, ready)
   end)
 
+  it("runs the starters: weapon state, alerts and the poison UI", function()
+    fire("ADDON_LOADED", "RogueAssistant")
+    fire("PLAYER_LOGIN")
+    assert.is_not_nil(ns.weaponState)
+    assert.is_not_nil(ns.poisonAlerts)
+    assert.are.equal(ns.profile.poison, ns.weaponState.data)
+    assert.is_true(ns.poisonButton.built)
+    assert.is_not_nil(ns.poisonAlertsView.driver)
+    assert.are.same({}, WowStub.state.violations)
+    assert.are.equal(0, #ns.store:Debug().log)
+  end)
+
+  it("starts nothing on another class", function()
+    WowStub.state.class = { "Mage", "MAGE", 8 }
+    fire("ADDON_LOADED", "RogueAssistant")
+    fire("PLAYER_LOGIN")
+    assert.is_nil(ns.weaponState)
+    assert.is_nil(ns.poisonButton)
+  end)
+
   it("disables itself quietly on another class", function()
     WowStub.state.class = { "Mage", "MAGE", 8 }
     fire("ADDON_LOADED", "RogueAssistant")

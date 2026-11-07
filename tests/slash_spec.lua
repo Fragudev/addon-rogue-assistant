@@ -29,12 +29,52 @@ describe("Slash", function()
     assert.are.equal(ns.Slash.Dispatch, _G.SlashCmdList.RAS)
   end)
 
-  it("says later for /ras, unlock and lock", function()
-    for _, line in ipairs({ "", "  ", "unlock", "LOCK" }) do
+  it("says later for /ras", function()
+    for _, line in ipairs({ "", "  " }) do
       printed = {}
       ns.Slash.Dispatch(line)
       assert.is_truthy(text():find("available in a later version", 1, true), line)
     end
+  end)
+
+  describe("unlock and lock", function()
+    local events
+
+    before_each(function()
+      events = {}
+      ns.bus = ns.EventBus.New()
+      for _, event in ipairs({ "layout.unlock", "layout.lock" }) do
+        ns.bus:Subscribe(event, function()
+          events[#events + 1] = event
+        end)
+      end
+    end)
+
+    it("publish the layout events", function()
+      ns.Slash.Dispatch("unlock")
+      assert.is_truthy(text():find("Frames unlocked", 1, true))
+      ns.Slash.Dispatch("LOCK")
+      assert.is_truthy(text():find("Frames locked", 1, true))
+      assert.are.same({ "layout.unlock", "layout.lock" }, events)
+    end)
+
+    it("publish nothing in combat", function()
+      WowStub.state.inCombat = true
+      ns.Slash.Dispatch("unlock")
+      assert.is_truthy(text():find("cannot be changed in combat", 1, true))
+      assert.are.same({}, events)
+    end)
+
+    it("say so when the addon is not active", function()
+      ns.disabled = "not_rogue"
+      ns.Slash.Dispatch("lock")
+      assert.is_truthy(text():find("not active on this character", 1, true))
+      ns.disabled, ns.bus = nil, nil
+      printed = {}
+      ns.Slash.Dispatch("unlock")
+      assert.is_truthy(text():find("not active on this character", 1, true))
+      assert.are.same({}, events)
+    end)
   end)
 
   it("prints help and rejects unknown commands", function()

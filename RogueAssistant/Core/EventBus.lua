@@ -2,7 +2,9 @@ local _, ns = ...
 
 -- Internal publish/subscribe. A handler that raises never stops the others: the error is kept for diagnostics
 -- (EventBus:Errors) and the next handler runs. Events used so far:
---   addon.ready    ()   the addon finished starting on a rogue
+--   addon.ready    ()   the addon finished starting on a rogue (every starter has run)
+--   layout.unlock  ()   /ras unlock: movable frames become draggable
+--   layout.lock    ()   /ras lock: movable frames are locked in place
 local EventBus = {}
 EventBus.__index = EventBus
 
