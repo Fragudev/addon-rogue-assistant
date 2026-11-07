@@ -1,0 +1,31 @@
+RogueAssistant/Core/Init.lua
+  s_7d15dada7060d6::t_173289e2dac3bf 63-70
+RogueAssistant/Core/Store.lua
+  s_7d15dada7060d6::t_e54e20f74b416e 20-28,32,58,75-79,90
+RogueAssistant/Domain/Settings.lua
+  s_7d15dada7060d6::t_ad1594c30abcf7 14-16,44-52,102
+tests/init_spec.lua
+  s_7d15dada7060d6::t_ab4bd699e61964 69-91
+tests/settings_spec.lua
+  s_7d15dada7060d6::t_7e46306e692098 25-42
+tests/store_spec.lua
+  s_7d15dada7060d6::t_0366d28c1e1aea 30-49
+tests/tracker_frames_spec.lua
+  s_7d15dada7060d6::t_ca2d4e8e5f9bfe 68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "6eaa2432a93c74454ed9286671174218ce10c6f5",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
