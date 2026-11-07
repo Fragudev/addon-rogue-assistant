@@ -22,5 +22,6 @@ Data\Poisons.lua
 Domain\PoisonCatalog.lua
 Domain\WeaponState.lua
 Domain\PoisonAlerts.lua
+UI\ViewModelPoisons.lua
 Core\Init.lua
 Commands\Slash.lua
