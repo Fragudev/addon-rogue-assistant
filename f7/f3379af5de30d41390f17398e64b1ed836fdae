@@ -1,0 +1,29 @@
+RogueAssistant/Core/Constants.lua
+  s_7d15dada7060d6::t_682c9a63926ccd 48-54
+RogueAssistant/Domain/Settings.lua
+  s_7d15dada7060d6::t_5166e5e7c1aae6 12
+RogueAssistant/Domain/TrackerModel.lua
+  s_7d15dada7060d6::t_2d8aa25ce57152 75-76
+tests/poison_button_spec.lua
+  s_7d15dada7060d6::t_31c01fd077da82 315
+tests/settings_spec.lua
+  s_7d15dada7060d6::t_b2b942d5079bf1 21
+tests/tracker_model_spec.lua
+  s_7d15dada7060d6::t_52a7ccae3bbd50 209-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "f7f3379af5de30d41390f17398e64b1ed836fdae",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
