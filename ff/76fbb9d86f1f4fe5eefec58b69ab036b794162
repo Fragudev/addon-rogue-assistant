@@ -1,0 +1,23 @@
+RogueAssistant/RogueAssistant.toc
+  s_7d15dada7060d6::t_853bfe6a8f09f7 30
+RogueAssistant/UI/ViewModelTracker.lua
+  s_7d15dada7060d6::t_8fe421e0d19278 1-258
+tests/viewmodel_tracker_spec.lua
+  s_7d15dada7060d6::t_d3ccb2f8d28047 1-340
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "ff76fbb9d86f1f4fe5eefec58b69ab036b794162",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
