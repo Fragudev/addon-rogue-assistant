@@ -1,0 +1,37 @@
+RogueAssistant/Core/EventBus.lua
+  s_7d15dada7060d6::t_5d840c1c9390ae 1-77
+RogueAssistant/Core/Locale.lua
+  s_7d15dada7060d6::t_0e0123aa1c628c 1-91
+RogueAssistant/Core/Store.lua
+  s_7d15dada7060d6::t_c4873625014569 1-138
+RogueAssistant/Domain/Settings.lua
+  s_7d15dada7060d6::t_9a5fca3d099b49 1-140
+RogueAssistant/Locales/enUS.lua
+  s_7d15dada7060d6::t_446117bef1b3de 1-31
+RogueAssistant/Locales/esES.lua
+  s_7d15dada7060d6::t_6dedeb1d9049a5 1-33
+tests/event_bus_spec.lua
+  s_7d15dada7060d6::t_f5811666a09c4b 1-79
+tests/locale_spec.lua
+  s_7d15dada7060d6::t_1fa0ac8aac03e5 1-77
+tests/settings_spec.lua
+  s_7d15dada7060d6::t_b91ea24b7db3f2 1-87
+tests/store_spec.lua
+  s_7d15dada7060d6::t_556c47724671c5 1-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "da423972ab2be3289f85191e8b17ff0a874d35a9",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
