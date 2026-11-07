@@ -77,6 +77,48 @@ again on the live client (launch was 2026-11-05).
 - `GetInventoryItemID("player", 17)` returns nil for an empty off hand slot; `Platform.GetInventoryItemID` turns that
   into `false` and keeps `nil` for "API missing, failing or secret".
 
+- **Secret-safe tracker path (read from warcraft.wiki.gg, not run in game yet).** The tracker shows cooldowns and auras
+  without reading them when the client makes them secret ([Secret values](https://warcraft.wiki.gg/wiki/Secret_Values):
+  no arithmetic, comparison, `#`, indexing or table keys; text, bar and cooldown widget methods accept them). Every call
+  goes through a `Platform` wrapper that gives nil when the API is missing or raises.
+  - [`C_Spell.GetSpellCooldown`](https://warcraft.wiki.gg/wiki/API_C_Spell.GetSpellCooldown): numbers when readable; a
+    secret field becomes nil in `Platform.GetSpellCooldown`.
+  - [`C_Spell.GetSpellCooldownDuration(spellIdentifier [, ignoreGCD])`](https://warcraft.wiki.gg/wiki/API_C_Spell.GetSpellCooldownDuration)
+    returns a DurationObject (12.0.5 added `ignoreGCD`; "MayReturnNothing"). `Platform.GetSpellCooldownDurationObject`
+    returns it raw.
+  - [`Cooldown:SetCooldownFromDurationObject(duration [, clearIfZero])`](https://warcraft.wiki.gg/wiki/API_Cooldown_SetCooldownFromDurationObject)
+    (12.0.0) is how a secret duration drives the swipe and Blizzard's countdown numbers. `Platform.SetCooldownFromDurationObject`
+    calls it through pcall with `clearIfZero = true`; when it refuses, the icon is drawn "hidden".
+  - [`C_Spell.GetSpellCharges`](https://warcraft.wiki.gg/wiki/API_C_Spell.GetSpellCharges): `maxCharges` is never secret,
+    `currentCharges` can be (it becomes nil, so a charge icon is never "ready" on a guess).
+  - [`C_UnitAuras.GetAuraDuration(unit, auraInstanceID)`](https://warcraft.wiki.gg/wiki/API_C_UnitAuras.GetAuraDuration)
+    returns a DurationObject for an aura (`Platform.GetAuraDurationObject`).
+  - [`C_UnitAuras.GetAuraApplicationDisplayCount(unit, auraInstanceID [, minDisplayCount [, maxDisplayCount]])`](https://warcraft.wiki.gg/wiki/API_C_UnitAuras.GetAuraApplicationDisplayCount)
+    returns the stack text, possibly secret, only for `FontString:SetText` (`Platform.GetAuraApplicationDisplayCount`,
+    `Platform.SetText`).
+  - `issecretvalue` is the secret test (`Platform.IsSecret`). `C_Secrets` is not used by the tracker.
+  - Rule in the tracker: a state holds a number only when it is readable. A secret cooldown becomes a duration object
+    (`durationObject`, never inspected: only tested for nil); if there is none, or the widget refuses it, the icon is
+    `hidden`. An aura whose spell id and name are secret cannot be matched, so its entries are `hidden` too (never
+    "missing"). `ready` is true only for a readable, finished cooldown.
+  - Bars need readable numbers (`StatusBar` fill is computed from them); an entry without them stays an icon.
+- **Tracker spell ids** (`Data/Spells.lua`). Ids come from the "External links" of the spell pages on warcraft.wiki.gg
+  (the list is [Rogue abilities (Forever)](https://warcraft.wiki.gg/wiki/Rogue_abilities_(Forever)), which shows no ids).
+  Linked for Forever (source "warcraft.wiki.gg spell page, Forever link"): Blind 2094, Cold Blood 14177, Blade Flurry
+  13877, Ghostly Strike 14278, Premeditation 14183, Death Mark 1316709 (Forever-only), Venom talent 1310703
+  (Forever-only; the buff is also called Venom and its id is not listed, so it is matched by name). Every other id is a
+  Classic Era id with `source = "classic-era, not verified on Forever"`: Vanish 1856/1857, Evasion 5277/26669, Sprint
+  2983/11305, Kick 1766/1769, Kidney Shot 408/8643, Gouge 1776 (classicdb.ch / wowclassicdb.com, the wiki page lists none),
+  Adrenaline Rush 13750, Preparation 14185, Stealth 1784, Slice and Dice 5171/6774, Expose Armor 8647/11198, Rupture
+  1943/11275, Garrote 703/11290, Cheap Shot 1833, Deadly Poison 2823, Crippling Poison 3408, Wound Poison 8679.
+  - Poised: the passive is 1328825; its buff id is not measured, so the aura is matched by the name the client gives for
+    1328825 (`Platform.GetSpellInfo`). Run `/ras debug auras` with Poised active to get the real id.
+  - The poison debuffs on the target are matched by name too (the debuff id is not the id of the poison spell) and are
+    always listed, since poisons are items, not spellbook spells.
+  - Not included, no confirmable Forever id or name: Thousand Cuts (the wiki page is the retail Trickster talent, id
+    441346) and Cutthroat (Season of Discovery rune, id 462708).
+  - A known rank id decides visibility (`IsPlayerSpell`); the cooldown is asked with the highest known rank.
+
 ## How to run the probe
 
 Run these in game, outside combat, then again inside a dungeon or an encounter, and paste the output back:
