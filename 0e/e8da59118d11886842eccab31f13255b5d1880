@@ -1,0 +1,23 @@
+assets/README.md
+  s_7d15dada7060d6::t_87d517148b2308 1-17
+assets/rogue_assistant_logo.svg
+  s_7d15dada7060d6::t_c2b7b514ec5335 1-49
+docs/CURSEFORGE_DESCRIPTION.md
+  s_7d15dada7060d6::t_12d9ce3ab68d8a 1-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "0ee8da59118d11886842eccab31f13255b5d1880",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "unknown"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
