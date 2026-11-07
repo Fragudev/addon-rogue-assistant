@@ -1,0 +1,25 @@
+RogueAssistant/Core/Init.lua
+  s_7d15dada7060d6::t_93ba4438d55334 1-12
+RogueAssistant/RogueAssistant.toc
+  s_7d15dada7060d6::t_0ea443aaac8e9a 1-11
+tests/init_spec.lua
+  s_7d15dada7060d6::t_4ee28eba12a36b 1-40
+tests/stubs/wow_api.lua
+  s_7d15dada7060d6::t_496a91954ca757 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "aeeaeb16cd46e7d45cf8ef140e93dcf20cd7c4a6",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
