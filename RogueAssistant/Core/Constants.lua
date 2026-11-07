@@ -28,6 +28,8 @@ local Constants = {
   POISON_PENDING_SECONDS = 30,
   -- Seconds the alert banner stays on screen.
   BANNER_SECONDS = 8,
+  -- Sides the poison flyout can open to (poison.flyoutDirection).
+  FLYOUT_DIRECTIONS = { UP = true, DOWN = true, LEFT = true, RIGHT = true },
   -- Spell ids used by the probe. The Poised passive is a Forever spell (plan section 2).
   SPELL_POISED = 1328825,
   -- Tracker (plan section 6). Layout bounds are { min, max, default }; Settings validates saved groups against them.

@@ -25,6 +25,7 @@ Domain\WeaponState.lua
 Domain\PoisonAlerts.lua
 Domain\TrackerModel.lua
 UI\ViewModelPoisons.lua
+UI\MoveHandle.lua
 UI\PoisonButton.lua
 UI\PoisonAlertsView.lua
 UI\ViewModelTracker.lua

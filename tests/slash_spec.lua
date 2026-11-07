@@ -78,9 +78,9 @@ describe("Slash", function()
 
     it("publish the layout events", function()
       ns.Slash.Dispatch("unlock")
-      assert.is_truthy(text():find("Frames unlocked", 1, true))
+      assert.is_truthy(text():find("Elements unlocked", 1, true))
       ns.Slash.Dispatch("LOCK")
-      assert.is_truthy(text():find("Frames locked", 1, true))
+      assert.is_truthy(text():find("Elements locked", 1, true))
       assert.are.same({ "layout.unlock", "layout.lock" }, events)
     end)
 
