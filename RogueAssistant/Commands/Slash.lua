@@ -83,7 +83,11 @@ function Slash.Dispatch(message)
     return
   end
   if name == "" then
-    say(ns.L["cmd.later"])
+    if ns.disabled or not ns.options then
+      say(ns.L["layout.unavailable"])
+    else
+      ns.options:Open()
+    end
     return
   end
   local entry = find(Slash.commands, name)

@@ -197,6 +197,21 @@ local function newFrame(frameType, name, parent, template)
   function frame:StopMovingOrSizing()
     self.moving = false
   end
+  function frame:SetParent(newParent)
+    self.parent = newParent
+  end
+  function frame:SetChecked(checked)
+    self.checked = checked and true or false
+  end
+  function frame:GetChecked()
+    return self.checked
+  end
+  function frame:SetText(text)
+    self.text = text
+  end
+  function frame:GetText()
+    return self.text or ""
+  end
   function frame:GetParent()
     return self.parent
   end

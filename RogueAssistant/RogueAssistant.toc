@@ -29,5 +29,7 @@ UI\PoisonButton.lua
 UI\PoisonAlertsView.lua
 UI\ViewModelTracker.lua
 UI\TrackerFrames.lua
+UI\ViewModelOptions.lua
+UI\Options.lua
 Core\Init.lua
 Commands\Slash.lua

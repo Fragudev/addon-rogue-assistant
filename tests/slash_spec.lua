@@ -29,12 +29,38 @@ describe("Slash", function()
     assert.are.equal(ns.Slash.Dispatch, _G.SlashCmdList.RAS)
   end)
 
-  it("says later for /ras", function()
-    for _, line in ipairs({ "", "  " }) do
+  describe("/ras", function()
+    it("opens the options, with or without spaces", function()
+      local opened = 0
+      ns.options = {
+        Open = function()
+          opened = opened + 1
+        end,
+      }
+      for _, line in ipairs({ "", "  " }) do
+        ns.Slash.Dispatch(line)
+      end
+      assert.are.equal(2, opened)
+      assert.are.same({}, printed)
+    end)
+
+    it("says the addon is inactive without options or when disabled", function()
+      ns.Slash.Dispatch("")
+      assert.is_truthy(text():find("not active on this character", 1, true))
       printed = {}
-      ns.Slash.Dispatch(line)
-      assert.is_truthy(text():find("available in a later version", 1, true), line)
-    end
+      ns.options = { Open = error }
+      ns.disabled = "not_rogue"
+      ns.Slash.Dispatch("")
+      assert.is_truthy(text():find("not active on this character", 1, true))
+    end)
+
+    it("lists the commands in /ras help", function()
+      ns.Slash.Dispatch("help")
+      assert.is_truthy(text():find("open the options", 1, true))
+      assert.is_truthy(text():find("/ras unlock", 1, true))
+      assert.is_truthy(text():find("/ras lock", 1, true))
+      assert.is_truthy(text():find("/ras debug", 1, true))
+    end)
   end)
 
   describe("unlock and lock", function()
