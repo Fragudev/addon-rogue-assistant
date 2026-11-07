@@ -36,6 +36,46 @@ again on the live client (launch was 2026-11-05).
 - The spellbook is read through `C_SpellBook.GetSpellBookSkillLineInfo` and `C_SpellBook.GetSpellBookItemInfo(index,
   Enum.SpellBookSpellBank.Player)`.
 - `SecureActionButtonTemplate` and `SecureHandlerClickTemplate` exist (plan section 5). Probe items 18 and 19 answer it.
+- **Applying a poison (secure mechanism, read from Blizzard source, not yet run in game).** A poison is used with
+  `type="item"`, `item="item:<id>"` and `target-slot=<16|17>` on a `SecureActionButtonTemplate`. Source:
+  [`SecureTemplates.lua`](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua)
+  (`live` branch of the Gethe mirror, a Mainline snapshot, not the Forever client). `OnActionButtonClick` first runs the
+  action (`SECURE_ACTIONS.item` uses the item through `SecureCmdUseItem`), and then, `if SpellCanTargetItem() or
+  SpellCanTargetItemID()` (the item started a spell that targets an item), reads `target-bag` / `target-slot` (and
+  `target-item`) with the same modifier and button suffix and calls `UseInventoryItem(slot)` (or
+  `C_Container.UseContainerItem(bag, slot)` when `target-bag` is set). So `target-slot` **is** honoured after an item that
+  starts targeting, which is what a poison does. The `macrotext` fallback (`/use item:<id>` + `/use 16|17`) was not
+  needed and is not implemented. To check in game: left click a poison in the flyout, the cast bar must start and the
+  main hand must get the poison; right click does the same for the off hand.
+  - Clicks: `RegisterForClicks("AnyUp")`. A mouse click on the template reaches `SecureActionButton_OnClick` as a
+    secure mouse press, which ignores `ActionButtonUseKeyDown`; registering "AnyDown" would not fire the action.
+  - The suffix of the attributes is the mouse button number: `type1` / `item1` / `target-slot1` for the left button,
+    `type2` / ... for the right button; the Shift variants are `shift-type1`, `shift-item1`, `shift-target-slot1` (the
+    modifier prefix comes first).
+  - Toggle in combat. [`SecureHandlers.lua`](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_RestrictedAddOnEnvironment/SecureHandlers.lua)
+    (`SecureHandlerWrapScript`, `Wrapped_Click`) runs a pre-body snippet against a header frame before the wrapped
+    `OnClick`; the snippet sees `self` (the wrapped frame) and `control` (the header). Returning `false` swallows the
+    click, returning nothing lets it through, and a second return value is handed to the post-body. The restricted
+    environment offers `IsShiftKeyDown` ([`RestrictedEnvironment.lua`](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_RestrictedAddOnEnvironment/RestrictedEnvironment.lua))
+    and handle methods `GetFrameRef`, `IsShown`, `Show` and `Hide` ([`RestrictedFrames.lua`](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_RestrictedAddOnEnvironment/RestrictedFrames.lua));
+    `Show` / `Hide` act on a protected frame even in combat.
+  - Structure chosen. One frame cannot be both a `SecureHandlerClickTemplate` (its `OnClick` runs `_onclick`) and a
+    `SecureActionButtonTemplate` (its `OnClick` runs the action), so the main button is a plain
+    `SecureActionButtonTemplate` whose `OnClick` is wrapped by a separate `SecureHandlerBaseTemplate` header: a click
+    without Shift toggles the flyout and is swallowed; Shift + left / right click passes through to
+    `shift-type1` / `shift-type2` (reapply the last main hand / off hand poison). Each flyout row is also a
+    `SecureActionButtonTemplate` whose `OnClick` is wrapped to hide the flyout afterwards. The flyout container is a
+    `SecureHandlerBaseTemplate` frame because a snippet can only show or hide a protected frame in combat.
+  - The wrap snippets use the header's `control` handle and `GetFrameRef("flyout")`; both were read in source, but the
+    exact `self` / `control` binding of wrapped snippets is the first thing to check if the toggle does nothing in game.
+- Poison item ids are Classic Era ids (item pages of warcraft.wiki.gg linked from "Rogue abilities (Forever)"); the
+  Forever wiki list shows no ids. Each entry in `Data/Poisons.lua` carries `source = "classic-era, not verified on
+  Forever"`. `/ras debug bags` lists the ids of the poisons in the bags to confirm them.
+- `GetWeaponEnchantInfo` gives an enchant id, not an item. The addon learns `enchantId -> poison item` when it applies a
+  poison itself and the enchant of that weapon changes within 30 seconds (`Domain/WeaponState.lua`, persisted in
+  `profile.poison.enchants`). A sharpening stone applied in that window would be learned as the poison (not guarded).
+- `GetInventoryItemID("player", 17)` returns nil for an empty off hand slot; `Platform.GetInventoryItemID` turns that
+  into `false` and keeps `nil` for "API missing, failing or secret".
 
 ## How to run the probe
 
