@@ -5,7 +5,7 @@ local _, ns = ...
 local Settings = {}
 Settings.__index = Settings
 
--- { path, default, type, min, max }. Later phases read these keys; tracker.groups is a placeholder for phase 3.
+-- { path, default, type, min, max, check }. `check(value)` is an extra validator (tracker.groups is a list of groups).
 Settings.SCHEMA = {
   {
     path = "poison.position",
@@ -20,8 +20,120 @@ Settings.SCHEMA = {
   { path = "alerts.triggers.instance", default = true, type = "boolean" },
   { path = "alerts.triggers.readycheck", default = true, type = "boolean" },
   { path = "alerts.triggers.combatEnd", default = true, type = "boolean" },
-  { path = "tracker.groups", default = {}, type = "table" },
+  {
+    path = "tracker.groups",
+    default = {},
+    type = "table",
+    check = function(value)
+      return Settings.ValidGroups(value)
+    end,
+  },
 }
+
+local function isNumber(value, minimum, maximum)
+  return type(value) == "number" and value == value and value >= minimum and value <= maximum
+end
+
+local function isId(value)
+  return isNumber(value, 1, 2 ^ 31) and value % 1 == 0
+end
+
+local function validEntry(entry)
+  if type(entry) ~= "table" then
+    return false
+  end
+  local hasId, hasName = entry.spellId ~= nil, entry.name ~= nil
+  if hasId == hasName then
+    return false
+  end
+  if hasId and not isId(entry.spellId) then
+    return false
+  end
+  if hasName and (type(entry.name) ~= "string" or entry.name == "") then
+    return false
+  end
+  if entry.ids ~= nil then
+    if type(entry.ids) ~= "table" then
+      return false
+    end
+    for _, id in ipairs(entry.ids) do
+      if not isId(id) then
+        return false
+      end
+    end
+  end
+  for _, flag in ipairs({ "stacks", "byName", "always", "custom" }) do
+    if entry[flag] ~= nil and type(entry[flag]) ~= "boolean" then
+      return false
+    end
+  end
+  return entry.source == nil or type(entry.source) == "string"
+end
+
+local function validLayout(group)
+  local tracker = ns.Constants.TRACKER
+  for key, bounds in pairs(tracker.LAYOUT) do
+    if group[key] ~= nil and not isNumber(group[key], bounds[1], bounds[2]) then
+      return false
+    end
+  end
+  if group.growth ~= nil and not tracker.GROWTH[group.growth] then
+    return false
+  end
+  if group.mode ~= nil and not tracker.MODES[group.mode] then
+    return false
+  end
+  if group.showWhenMissing ~= nil and not tracker.MISSING[group.showWhenMissing] then
+    return false
+  end
+  local position = group.position
+  if position ~= nil then
+    if
+      type(position) ~= "table"
+      or type(position.point) ~= "string"
+      or type(position.relativePoint) ~= "string"
+      or not isNumber(position.x, -10000, 10000)
+      or not isNumber(position.y, -10000, 10000)
+    then
+      return false
+    end
+  end
+  return true
+end
+
+-- true when `groups` is a well-formed list of tracker groups: unique string ids, a known kind, valid entries and
+-- layout options inside their bounds. Missing layout options are allowed (TrackerModel fills them in).
+function Settings.ValidGroups(groups)
+  local tracker = ns.Constants.TRACKER
+  if type(groups) ~= "table" or #groups > tracker.MAX_GROUPS then
+    return false
+  end
+  local seen = {}
+  for _, group in ipairs(groups) do
+    if type(group) ~= "table" or type(group.id) ~= "string" or group.id == "" or seen[group.id] then
+      return false
+    end
+    seen[group.id] = true
+    if not tracker.KINDS[group.kind] or type(group.entries) ~= "table" or #group.entries > tracker.MAX_ENTRIES then
+      return false
+    end
+    if group.title ~= nil and type(group.title) ~= "string" then
+      return false
+    end
+    if group.titleKey ~= nil and type(group.titleKey) ~= "string" then
+      return false
+    end
+    for _, entry in ipairs(group.entries) do
+      if not validEntry(entry) then
+        return false
+      end
+    end
+    if not validLayout(group) then
+      return false
+    end
+  end
+  return true
+end
 
 local byPath = {}
 for _, entry in ipairs(Settings.SCHEMA) do
@@ -72,6 +184,9 @@ local function valid(entry, value)
     if value ~= value or (entry.min and value < entry.min) or (entry.max and value > entry.max) then
       return false
     end
+  end
+  if entry.check and not entry.check(value) then
+    return false
   end
   return true
 end

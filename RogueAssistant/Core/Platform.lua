@@ -215,6 +215,20 @@ function Platform.GetSpellCooldownDurationObject(spellId)
   return nil
 end
 
+-- Charges of a charge-based spell: current (number, nil when secret) and max (number). nil when the spell has no
+-- charges, the API is missing or raises.
+function Platform.GetSpellCharges(spellId)
+  local info = first("table", "C_Spell.GetSpellCharges", spellId)
+  if not info then
+    return nil
+  end
+  local maxCharges = typedValue(info.maxCharges, "number")
+  if not maxCharges then
+    return nil
+  end
+  return typedValue(info.currentCharges, "number"), maxCharges
+end
+
 -- Auras ----------------------------------------------------------------------------------------------------------
 
 -- Reduces an AuraData table to the fields the addon reads. Each field is nil when it is secret or of another type.
@@ -259,6 +273,50 @@ function Platform.GetAuras(unit, filter)
     list[#list + 1] = aura
   end
   return list
+end
+
+-- The raw duration object of an aura (C_UnitAuras.GetAuraDuration), untouched like the cooldown one: it is only
+-- handed to a widget. nil when the API is missing, raises or answers nothing.
+function Platform.GetAuraDurationObject(unit, auraInstanceID)
+  local fn = Platform.Resolve("C_UnitAuras.GetAuraDuration")
+  if not fn then
+    return nil
+  end
+  local ok, object = pcall(fn, unit, auraInstanceID)
+  if ok then
+    return object
+  end
+  return nil
+end
+
+-- The formatted stack count of an aura (C_UnitAuras.GetAuraApplicationDisplayCount): a string, empty below
+-- `minCount`, and possibly secret. Returned untouched for FontString:SetText only. nil when unavailable.
+function Platform.GetAuraApplicationDisplayCount(unit, auraInstanceID, minCount)
+  local fn = Platform.Resolve("C_UnitAuras.GetAuraApplicationDisplayCount")
+  if not fn then
+    return nil
+  end
+  local ok, text = pcall(fn, unit, auraInstanceID, minCount)
+  if ok then
+    return text
+  end
+  return nil
+end
+
+-- Widgets -------------------------------------------------------------------------------------------------------
+
+-- Cooldown:SetCooldownFromDurationObject through pcall. true when the widget took the object. The object may be
+-- secret: the widget method is one of the few places that accept it.
+function Platform.SetCooldownFromDurationObject(cooldown, object)
+  if type(cooldown) ~= "table" or type(cooldown.SetCooldownFromDurationObject) ~= "function" then
+    return false
+  end
+  return (pcall(cooldown.SetCooldownFromDurationObject, cooldown, object, true))
+end
+
+-- FontString:SetText through pcall, for text that may be secret. true when the text was applied.
+function Platform.SetText(fontString, text)
+  return (pcall(fontString.SetText, fontString, text))
 end
 
 -- Weapon enchants ------------------------------------------------------------------------------------------------

@@ -55,4 +55,9 @@ ns.Locale.Register("enUS", {
   ["alert.expiring"] = "The %s poison expires in %d min.",
   ["alert.charges"] = "The %s poison is low on charges: %d left.",
   ["alert.stock"] = "Low stock of %s: %d left.",
+  ["tracker.group.essentials"] = "Essentials",
+  ["tracker.group.buffs"] = "Buffs",
+  ["tracker.group.target"] = "Target",
+  ["tracker.hidden.mark"] = "?",
+  ["tracker.hidden.tip"] = "The game hides this value right now.",
 })

@@ -58,4 +58,9 @@ ns.Locale.Register("esES", {
   ["alert.expiring"] = "El veneno de %s caduca en %d min.",
   ["alert.charges"] = "Al veneno de %s le quedan pocas cargas: %d.",
   ["alert.stock"] = "Poco stock de %s: quedan %d.",
+  ["tracker.group.essentials"] = "Esenciales",
+  ["tracker.group.buffs"] = "Beneficios",
+  ["tracker.group.target"] = "Objetivo",
+  ["tracker.hidden.mark"] = "?",
+  ["tracker.hidden.tip"] = "El juego oculta este valor en este momento.",
 })

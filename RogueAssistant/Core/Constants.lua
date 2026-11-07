@@ -30,6 +30,36 @@ local Constants = {
   BANNER_SECONDS = 8,
   -- Spell ids used by the probe. The Poised passive is a Forever spell (plan section 2).
   SPELL_POISED = 1328825,
+  -- Tracker (plan section 6). Layout bounds are { min, max, default }; Settings validates saved groups against them.
+  TRACKER = {
+    MAX_GROUPS = 12,
+    MAX_ENTRIES = 40,
+    KINDS = { cooldown = true, buff = true, debuff = true },
+    GROWTH = { RIGHT = true, LEFT = true, UP = true, DOWN = true },
+    MODES = { icons = true, bars = true },
+    MISSING = { hide = true, dim = true },
+    LAYOUT = {
+      iconSize = { 16, 96, 36 },
+      spacing = { 0, 32, 4 },
+      columns = { 1, 20, 8 },
+      scale = { 0.5, 3, 1 },
+      alphaOutOfCombat = { 0, 1, 1 },
+    },
+    DEFAULT_GROWTH = "RIGHT",
+    DEFAULT_MODE = "icons",
+    DEFAULT_MISSING = "hide",
+    -- Where the aura of a group kind is read: the unit and the aura filter.
+    AURA_SOURCE = {
+      buff = { unit = "player", filter = "HELPFUL" },
+      debuff = { unit = "target", filter = "HARMFUL|PLAYER" },
+    },
+    -- A bar slot is this many icon sizes wide.
+    BAR_WIDTH_FACTOR = 4,
+    -- Cooldowns up to this many seconds are the global cooldown, not an ability cooldown.
+    GCD_SECONDS = 1.5,
+    -- Seconds between redraws of the bar fill and the remaining-time text.
+    BAR_REFRESH_SECONDS = 0.1,
+  },
 }
 
 ns.Constants = Constants

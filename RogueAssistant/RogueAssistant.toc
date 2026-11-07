@@ -19,9 +19,11 @@ Core\Startup.lua
 Core\Probe.lua
 Domain\Settings.lua
 Data\Poisons.lua
+Data\Spells.lua
 Domain\PoisonCatalog.lua
 Domain\WeaponState.lua
 Domain\PoisonAlerts.lua
+Domain\TrackerModel.lua
 UI\ViewModelPoisons.lua
 UI\PoisonButton.lua
 UI\PoisonAlertsView.lua

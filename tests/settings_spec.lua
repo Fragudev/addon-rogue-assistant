@@ -85,3 +85,137 @@ describe("Settings", function()
     assert.is_nil(Settings.Default("nope"))
   end)
 end)
+
+describe("Settings tracker groups", function()
+  local ns, base
+
+  local function group(overrides)
+    local g = { id = "g", kind = "buff", entries = { { spellId = 1784 } } }
+    for key, value in pairs(overrides or {}) do
+      g[key] = value
+    end
+    return g
+  end
+
+  before_each(function()
+    WowStub.Reset()
+    ns = dofile("tests/support/loader.lua").Load({ "Core/Constants.lua", "Domain/Settings.lua" })
+    base = ns.Settings.New({})
+  end)
+
+  it("accepts a well-formed list", function()
+    local full = group({
+      title = "T",
+      titleKey = "k",
+      iconSize = 40,
+      growth = "UP",
+      mode = "bars",
+      showWhenMissing = "dim",
+      position = { point = "CENTER", relativePoint = "CENTER", x = 1, y = 2 },
+      entries = {
+        { spellId = 1, ids = { 1, 2 }, stacks = true, byName = true, always = true, custom = true, source = "s" },
+        { name = "Foo" },
+      },
+    })
+    assert.is_true(base:Set("tracker.groups", { full, group({ id = "h" }) }))
+  end)
+
+  local bad = {
+    ["duplicate ids"] = function()
+      return { group(), group() }
+    end,
+    ["empty id"] = function()
+      return { group({ id = "" }) }
+    end,
+    ["non-table group"] = function()
+      return { "x" }
+    end,
+    ["unknown kind"] = function()
+      return { group({ kind = "nope" }) }
+    end,
+    ["entries not a table"] = function()
+      return { group({ entries = 1 }) }
+    end,
+    ["too many entries"] = function()
+      local entries = {}
+      for index = 1, 41 do
+        entries[index] = { spellId = index }
+      end
+      return { group({ entries = entries }) }
+    end,
+    ["non-string title"] = function()
+      return { group({ title = 1 }) }
+    end,
+    ["non-string titleKey"] = function()
+      return { group({ titleKey = 1 }) }
+    end,
+    ["entry without id or name"] = function()
+      return { group({ entries = { {} } }) }
+    end,
+    ["entry with both id and name"] = function()
+      return { group({ entries = { { spellId = 1, name = "a" } } }) }
+    end,
+    ["entry not a table"] = function()
+      return { group({ entries = { 5 } }) }
+    end,
+    ["fractional spell id"] = function()
+      return { group({ entries = { { spellId = 1.5 } } }) }
+    end,
+    ["empty name"] = function()
+      return { group({ entries = { { name = "" } } }) }
+    end,
+    ["ids not a table"] = function()
+      return { group({ entries = { { spellId = 1, ids = 1 } } }) }
+    end,
+    ["bad rank id"] = function()
+      return { group({ entries = { { spellId = 1, ids = { "x" } } } }) }
+    end,
+    ["non-boolean flag"] = function()
+      return { group({ entries = { { spellId = 1, stacks = "yes" } } }) }
+    end,
+    ["non-string source"] = function()
+      return { group({ entries = { { spellId = 1, source = 1 } } }) }
+    end,
+    ["icon size out of range"] = function()
+      return { group({ iconSize = 1 }) }
+    end,
+    ["unknown growth"] = function()
+      return { group({ growth = "X" }) }
+    end,
+    ["unknown mode"] = function()
+      return { group({ mode = "X" }) }
+    end,
+    ["unknown missing mode"] = function()
+      return { group({ showWhenMissing = "X" }) }
+    end,
+    ["position not a table"] = function()
+      return { group({ position = 1 }) }
+    end,
+    ["position without point"] = function()
+      return { group({ position = { relativePoint = "A", x = 1, y = 1 } }) }
+    end,
+    ["position out of range"] = function()
+      return { group({ position = { point = "A", relativePoint = "A", x = 1e9, y = 1 } }) }
+    end,
+    ["too many groups"] = function()
+      local groups = {}
+      for index = 1, 13 do
+        groups[index] = group({ id = "g" .. index })
+      end
+      return groups
+    end,
+  }
+
+  for name, build in pairs(bad) do
+    it("rejects " .. name, function()
+      assert.are.same({ false, "invalid" }, { base:Set("tracker.groups", build()) })
+      assert.are.same({}, base:Get("tracker.groups"))
+    end)
+  end
+
+  it("replaces an invalid saved list when the settings load", function()
+    local root = { tracker = { groups = { group({ kind = "nope" }) } } }
+    local loaded = ns.Settings.New(root)
+    assert.are.same({}, loaded:Get("tracker.groups"))
+  end)
+end)

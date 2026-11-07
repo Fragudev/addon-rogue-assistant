@@ -8,11 +8,39 @@
 --   WowStub.Secret             a value issecretvalue() reports as secret
 
 local WowStub = {}
+-- A secret raises on everything the client forbids: arithmetic, ordering comparisons, length, indexing and calls.
+-- Equality (==) and type() stay legal, as in the client.
+local function forbidden()
+  error("attempt to use a secret value", 2)
+end
 WowStub.Secret = setmetatable({}, {
   __tostring = function()
     return "<secret>"
   end,
+  __add = forbidden,
+  __sub = forbidden,
+  __mul = forbidden,
+  __div = forbidden,
+  __mod = forbidden,
+  __pow = forbidden,
+  __unm = forbidden,
+  __lt = forbidden,
+  __le = forbidden,
+  __len = forbidden,
+  __call = forbidden,
+  __index = forbidden,
+  __newindex = forbidden,
 })
+
+-- Stands in for a DurationObject: an opaque table that only widgets may consume.
+function WowStub.DurationObject(label)
+  return setmetatable({ label = label }, {
+    __lt = forbidden,
+    __le = forbidden,
+    __add = forbidden,
+    __sub = forbidden,
+  })
+end
 
 local function newState()
   return {
@@ -30,6 +58,14 @@ local function newState()
     violations = {},
     shift = false,
     equipment = { [16] = 1001, [17] = 1002 },
+    -- Tracker fakes: per spell id cooldown tables, duration objects and charge tables; per aura instance id
+    -- duration objects and display counts.
+    cooldowns = {},
+    cooldownObjects = {},
+    charges = {},
+    auraDurations = {},
+    auraCounts = {},
+    cooldownObjectFails = false,
   }
 end
 
@@ -59,6 +95,12 @@ local function newRegion(kind)
   end
   function region:IsShown()
     return self.shown
+  end
+  function region:SetAlpha(alpha)
+    self.alpha = alpha
+  end
+  function region:SetVertexColor(...)
+    self.vertex = { ... }
   end
   return setmetatable(region, {
     __index = function(_, name)
@@ -154,6 +196,39 @@ local function newFrame(frameType, name, parent, template)
   end
   function frame:GetParent()
     return self.parent
+  end
+  -- Tracker widgets: Cooldown, StatusBar, alpha and mouse.
+  function frame:SetAlpha(alpha)
+    self.alpha = alpha
+  end
+  function frame:GetAlpha()
+    return self.alpha or 1
+  end
+  function frame:EnableMouse(enabled)
+    self.mouseEnabled = enabled
+  end
+  function frame:SetCooldown(start, duration)
+    self.cooldown = { start = start, duration = duration }
+    self.durationObject = nil
+  end
+  function frame:SetCooldownFromDurationObject(object)
+    if state.cooldownObjectFails then
+      error("stub failure: SetCooldownFromDurationObject")
+    end
+    self.durationObject = object
+    self.cooldown = nil
+  end
+  function frame:Clear()
+    self.cooldown, self.durationObject = nil, nil
+  end
+  function frame:SetMinMaxValues(minimum, maximum)
+    self.minValue, self.maxValue = minimum, maximum
+  end
+  function frame:SetValue(value)
+    self.value = value
+  end
+  function frame:SetHideCountdownNumbers(hide)
+    self.hideNumbers = hide
   end
 
   -- Secure handler methods (SecureHandlerBaseTemplate).
@@ -256,13 +331,29 @@ local function defaults()
       return state.knownSpells ~= nil and state.knownSpells[spellId] == true
     end,
     ["C_Spell.GetSpellInfo"] = function(spellId)
+      if type(spellId) == "string" then
+        return { name = spellId, iconID = 300000 }
+      end
       return { name = "Spell" .. spellId, iconID = 100000 + spellId }
     end,
-    ["C_Spell.GetSpellCooldown"] = function()
-      return { startTime = 10, duration = 20, isEnabled = true, modRate = 1 }
+    ["C_Spell.GetSpellCooldown"] = function(spellId)
+      return state.cooldowns[spellId] or { startTime = 10, duration = 20, isEnabled = true, modRate = 1 }
     end,
     ["C_Spell.GetSpellCooldownDuration"] = function(spellId)
+      local object = state.cooldownObjects[spellId]
+      if object ~= nil then
+        return object
+      end
       return { durationObject = spellId }
+    end,
+    ["C_Spell.GetSpellCharges"] = function(spellId)
+      return state.charges[spellId]
+    end,
+    ["C_UnitAuras.GetAuraDuration"] = function(_, auraInstanceID)
+      return state.auraDurations[auraInstanceID]
+    end,
+    ["C_UnitAuras.GetAuraApplicationDisplayCount"] = function(_, auraInstanceID)
+      return state.auraCounts[auraInstanceID]
     end,
     ["C_UnitAuras.GetPlayerAuraBySpellID"] = function(spellId)
       for _, aura in ipairs(state.auras.player) do

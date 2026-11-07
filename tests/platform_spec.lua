@@ -202,6 +202,70 @@ describe("Platform", function()
     end)
   end)
 
+  describe("tracker wrappers", function()
+    it("reads the charges of a spell and drops secret current charges", function()
+      WowStub.state.charges[5] = { currentCharges = 2, maxCharges = 3 }
+      local current, maximum = P.GetSpellCharges(5)
+      assert.are.equal(2, current)
+      assert.are.equal(3, maximum)
+      WowStub.state.charges[5] = { currentCharges = WowStub.Secret, maxCharges = 3 }
+      current, maximum = P.GetSpellCharges(5)
+      assert.is_nil(current)
+      assert.are.equal(3, maximum)
+    end)
+
+    it("gives nil charges for a spell without charges, a missing API or a failing one", function()
+      assert.is_nil(P.GetSpellCharges(5))
+      WowStub.state.charges[5] = { currentCharges = 1 }
+      assert.is_nil(P.GetSpellCharges(5))
+      WowStub.Fail("C_Spell.GetSpellCharges")
+      assert.is_nil(P.GetSpellCharges(5))
+      WowStub.Remove("C_Spell.GetSpellCharges")
+      assert.is_nil(P.GetSpellCharges(5))
+    end)
+
+    it("returns the aura duration object and display count untouched", function()
+      local object = WowStub.DurationObject("aura")
+      WowStub.state.auraDurations[7] = object
+      WowStub.state.auraCounts[7] = WowStub.Secret
+      assert.are.equal(object, P.GetAuraDurationObject("target", 7))
+      assert.are.equal(WowStub.Secret, P.GetAuraApplicationDisplayCount("target", 7, 2))
+    end)
+
+    it("gives nil for the aura objects when the APIs are missing or failing", function()
+      WowStub.Fail("C_UnitAuras.GetAuraDuration")
+      WowStub.Fail("C_UnitAuras.GetAuraApplicationDisplayCount")
+      assert.is_nil(P.GetAuraDurationObject("target", 7))
+      assert.is_nil(P.GetAuraApplicationDisplayCount("target", 7))
+      WowStub.Remove("C_UnitAuras.GetAuraDuration")
+      WowStub.Remove("C_UnitAuras.GetAuraApplicationDisplayCount")
+      assert.is_nil(P.GetAuraDurationObject("target", 7))
+      assert.is_nil(P.GetAuraApplicationDisplayCount("target", 7))
+    end)
+
+    it("hands a duration object to a cooldown widget and reports refusal", function()
+      local widget = CreateFrame("Cooldown", nil, UIParent, "CooldownFrameTemplate")
+      local object = WowStub.Secret
+      assert.is_true(P.SetCooldownFromDurationObject(widget, object))
+      assert.are.equal(object, widget.durationObject)
+      WowStub.state.cooldownObjectFails = true
+      assert.is_false(P.SetCooldownFromDurationObject(widget, object))
+      assert.is_false(P.SetCooldownFromDurationObject({}, object))
+      assert.is_false(P.SetCooldownFromDurationObject(nil, object))
+    end)
+
+    it("sets text that may be secret through pcall", function()
+      local text = CreateFrame("Frame"):CreateFontString()
+      assert.is_true(P.SetText(text, WowStub.Secret))
+      assert.are.equal(WowStub.Secret, text:GetText())
+      assert.is_false(P.SetText({
+        SetText = function()
+          error("no")
+        end,
+      }, "x"))
+    end)
+  end)
+
   describe("auras", function()
     local aura = {
       name = "Stealth",
