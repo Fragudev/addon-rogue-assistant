@@ -206,6 +206,16 @@ describe("TrackerModel", function()
       assert.are.equal(48, model:Group("buffs").iconSize)
     end)
 
+    it("spreads the default groups instead of stacking them", function()
+      local function spot(id)
+        local position = model:Group(id).position
+        return position.x, position.y
+      end
+      assert.are.same({ 0, 140 }, { spot("essentials") })
+      assert.are.same({ 0, 220 }, { spot("buffs") })
+      assert.are.same({ 300, 60 }, { spot("target") })
+    end)
+
     it("stores a position and refuses a malformed one", function()
       assert.is_true(model:SetPosition("buffs", { point = "TOP", relativePoint = "TOP", x = 1, y = -2, junk = 1 }))
       assert.are.same({ point = "TOP", relativePoint = "TOP", x = 1, y = -2 }, root.tracker.groups[2].position)

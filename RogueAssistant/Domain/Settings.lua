@@ -9,7 +9,7 @@ Settings.__index = Settings
 Settings.SCHEMA = {
   {
     path = "poison.position",
-    default = { point = "CENTER", relativePoint = "CENTER", x = 0, y = -150 },
+    default = { point = "BOTTOM", relativePoint = "BOTTOM", x = 0, y = 200 },
     type = "table",
   },
   { path = "poison.scale", default = 1, type = "number", min = 0.5, max = 3 },

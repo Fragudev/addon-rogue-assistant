@@ -18,7 +18,7 @@ describe("Settings", function()
     assert.is_true(settings:Get("alerts.triggers.combatEnd"))
     assert.are.equal(1, settings:Get("poison.scale"))
     assert.is_true(settings:Get("poison.locked"))
-    assert.are.equal("CENTER", settings:Get("poison.position").point)
+    assert.are.equal("BOTTOM", settings:Get("poison.position").point)
     assert.are.same({}, settings:Get("tracker.groups"))
   end)
 

@@ -45,6 +45,13 @@ local Constants = {
       scale = { 0.5, 3, 1 },
       alphaOutOfCombat = { 0, 1, 1 },
     },
+    -- Where each shipped group starts (offsets from the screen centre): essentials above the centre, buffs above that,
+    -- the target debuffs to the right. Only defaults: a saved position always wins.
+    DEFAULT_POSITIONS = {
+      essentials = { x = 0, y = 140 },
+      buffs = { x = 0, y = 220 },
+      target = { x = 300, y = 60 },
+    },
     DEFAULT_GROWTH = "RIGHT",
     DEFAULT_MODE = "icons",
     DEFAULT_MISSING = "hide",

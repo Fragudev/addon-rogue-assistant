@@ -72,7 +72,8 @@ local function defaultGroups()
   local groups = {}
   for index, definition in ipairs(ns.Spells.GROUPS) do
     local group = copy(definition)
-    group.position = { point = "CENTER", relativePoint = "CENTER", x = 0, y = -(180 + 60 * (index - 1)) }
+    local spot = ns.Constants.TRACKER.DEFAULT_POSITIONS[group.id] or { x = 0, y = 60 * (index - 1) }
+    group.position = { point = "CENTER", relativePoint = "CENTER", x = spot.x, y = spot.y }
     groups[index] = group
   end
   return groups

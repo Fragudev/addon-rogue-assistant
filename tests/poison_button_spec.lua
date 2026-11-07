@@ -312,7 +312,7 @@ describe("PoisonButton", function()
 
     it("restores the saved position and scale, locked by default", function()
       local point = poison.button.points[1]
-      assert.are.same({ "CENTER", UIParent, "CENTER", 0, -150 }, point)
+      assert.are.same({ "BOTTOM", UIParent, "BOTTOM", 0, 200 }, point)
       assert.are.equal(1, poison.button.scale)
       assert.is_false(poison.button.movable)
       assert.is_false(poison.button.moveOverlay.shown)
@@ -361,7 +361,7 @@ describe("PoisonButton", function()
       poison.button.scripts.OnDragStart(poison.button)
       assert.is_falsy(poison.button.moving)
       poison.button.scripts.OnDragStop(poison.button)
-      assert.are.equal(-150, settings:Get("poison.position").y)
+      assert.are.equal(200, settings:Get("poison.position").y)
     end)
 
     it("keeps the position when the frame has no anchor after a drag", function()
@@ -369,7 +369,7 @@ describe("PoisonButton", function()
       poison.button.scripts.OnDragStart(poison.button)
       poison.button.points = {}
       poison.button.scripts.OnDragStop(poison.button)
-      assert.are.equal(-150, settings:Get("poison.position").y)
+      assert.are.equal(200, settings:Get("poison.position").y)
     end)
   end)
 
