@@ -65,7 +65,7 @@ describe("TrackerFrames", function()
       local create = CreateFrame
       WowStub.Set("CreateFrame", function(...)
         local created = create(...)
-        function created:RegisterUnitEvent()
+        function created.RegisterUnitEvent()
           error("refused")
         end
         return created

@@ -11,6 +11,9 @@ Settings.SCHEMA = {
     path = "poison.position",
     default = { point = "BOTTOM", relativePoint = "BOTTOM", x = 0, y = 200 },
     type = "table",
+    check = function(value)
+      return Settings.ValidPosition(value)
+    end,
   },
   { path = "poison.scale", default = 1, type = "number", min = 0.5, max = 3 },
   { path = "poison.locked", default = true, type = "boolean" },
@@ -36,6 +39,15 @@ end
 
 local function isId(value)
   return isNumber(value, 1, 2 ^ 31) and value % 1 == 0
+end
+
+-- true when `position` is { point, relativePoint, x, y } with anchor names and on-screen offsets.
+function Settings.ValidPosition(position)
+  return type(position) == "table"
+    and type(position.point) == "string"
+    and type(position.relativePoint) == "string"
+    and isNumber(position.x, -10000, 10000)
+    and isNumber(position.y, -10000, 10000)
 end
 
 local function validEntry(entry)
@@ -87,18 +99,7 @@ local function validLayout(group)
     return false
   end
   local position = group.position
-  if position ~= nil then
-    if
-      type(position) ~= "table"
-      or type(position.point) ~= "string"
-      or type(position.relativePoint) ~= "string"
-      or not isNumber(position.x, -10000, 10000)
-      or not isNumber(position.y, -10000, 10000)
-    then
-      return false
-    end
-  end
-  return true
+  return position == nil or Settings.ValidPosition(position)
 end
 
 -- true when `groups` is a well-formed list of tracker groups: unique string ids, a known kind, valid entries and

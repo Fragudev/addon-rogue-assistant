@@ -22,6 +22,24 @@ describe("Settings", function()
     assert.are.same({}, settings:Get("tracker.groups"))
   end)
 
+  it("replaces an invalid poison position with the default", function()
+    local bad = {
+      { point = "TOP" },
+      { point = 1, relativePoint = "TOP", x = 0, y = 0 },
+      { point = "TOP", relativePoint = {}, x = 0, y = 0 },
+      { point = "TOP", relativePoint = "TOP", x = "1", y = 0 },
+      { point = "TOP", relativePoint = "TOP", x = 0, y = 0 / 0 },
+      { point = "TOP", relativePoint = "TOP", x = 99999, y = 0 },
+    }
+    for _, position in ipairs(bad) do
+      local loaded = Settings.New({ poison = { position = position } })
+      assert.are.same({ point = "BOTTOM", relativePoint = "BOTTOM", x = 0, y = 200 }, loaded:Get("poison.position"))
+      assert.are.same({ false, "invalid" }, { settings:Set("poison.position", position) })
+    end
+    local good = { point = "TOP", relativePoint = "TOP", x = 3, y = -4 }
+    assert.are.same(good, Settings.New({ poison = { position = good } }):Get("poison.position"))
+  end)
+
   it("keeps valid saved values and replaces invalid ones", function()
     local saved = { alerts = { stock = 9, charges = "many" }, poison = { scale = 99 } }
     local loaded = Settings.New(saved)

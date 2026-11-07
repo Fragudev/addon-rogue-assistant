@@ -60,6 +60,13 @@ frame:SetScript("OnEvent", function(_, event, loadedAddon)
       initDatabase()
     end
   elseif event == "PLAYER_LOGIN" then
-    startForPlayer()
+    -- A failing startup (bad saved data, a broken module) must not raise into the client: log it and stay off.
+    local ok, err = pcall(startForPlayer)
+    if not ok then
+      ns.disabled = ns.disabled or "startup_error"
+      if ns.store then
+        pcall(ns.store.Log, ns.store, "startup failed: " .. tostring(err))
+      end
+    end
   end
 end)

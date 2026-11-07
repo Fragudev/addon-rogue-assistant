@@ -17,15 +17,19 @@ local function ensureTable(parent, key)
   return parent[key]
 end
 
+-- Makes the containers of the layout tables again. SavedVariables can hold anything (hand edits, other versions), so
+-- this runs on every Open, after the migrations: a wrongly typed `profiles`, `debug`, `log` or `lastProbe` is empty.
+local function repair(db)
+  ensureTable(db, "profiles")
+  local debug = ensureTable(db, "debug")
+  ensureTable(debug, "log")
+  ensureTable(debug, "lastProbe")
+end
+
 -- Each entry upgrades a db to that version; all of them must be idempotent. Exposed so tests can chain extras.
 Store.MIGRATIONS = {
   -- v1: first layout (a missing or empty db is version 0).
-  [1] = function(db)
-    ensureTable(db, "profiles")
-    local debug = ensureTable(db, "debug")
-    ensureTable(debug, "log")
-    ensureTable(debug, "lastProbe")
-  end,
+  [1] = repair,
 }
 
 local function versionOf(db)
@@ -51,6 +55,7 @@ function Store.Open(db, deps)
   for step = version + 1, target do
     Store.MIGRATIONS[step](db)
   end
+  repair(db)
   db.schemaVersion = target
 
   return setmetatable({
@@ -67,7 +72,11 @@ function Store:Db()
 end
 
 function Store:FindProfile(guid)
-  return self.db.profiles[guid]
+  local profile = self.db.profiles[guid]
+  if type(profile) == "table" then
+    return profile
+  end
+  return nil
 end
 
 -- Returns the profile of a character, created on first use. `info` ({ name, class }) refreshes the display fields and
@@ -78,7 +87,7 @@ function Store:Profile(guid, info)
   end
   local profiles = self.db.profiles
   local profile = profiles[guid]
-  if not profile then
+  if type(profile) ~= "table" then
     profile = {}
     profiles[guid] = profile
   end

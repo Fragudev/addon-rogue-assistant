@@ -66,6 +66,29 @@ describe("Init", function()
     assert.are.equal(1, ready)
   end)
 
+  it("survives a failing startup, stays disabled and logs a debug line", function()
+    fire("ADDON_LOADED", "RogueAssistant")
+    ns.Settings.New = function()
+      error("boom")
+    end
+    assert.has_no.errors(function()
+      fire("PLAYER_LOGIN")
+    end)
+    assert.are.equal("startup_error", ns.disabled)
+    local log = _G.RogueAssistantDB.debug.log
+    assert.is_truthy(log[#log]:find("startup failed", 1, true))
+  end)
+
+  it("survives saved data with a wrongly typed profile", function()
+    _G.RogueAssistantDB = { schemaVersion = 1, profiles = { ["Player-1-0000ABCD"] = "bad" }, debug = "bad" }
+    fire("ADDON_LOADED", "RogueAssistant")
+    assert.has_no.errors(function()
+      fire("PLAYER_LOGIN")
+    end)
+    assert.is_nil(ns.disabled)
+    assert.are.equal("ROGUE", _G.RogueAssistantDB.profiles["Player-1-0000ABCD"].class)
+  end)
+
   it("runs the starters: weapon state, alerts and the poison UI", function()
     fire("ADDON_LOADED", "RogueAssistant")
     fire("PLAYER_LOGIN")
