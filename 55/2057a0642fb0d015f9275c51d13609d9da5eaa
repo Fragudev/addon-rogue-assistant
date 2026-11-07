@@ -1,0 +1,21 @@
+RogueAssistant/UI/PoisonButton.lua
+  s_7d15dada7060d6::t_5f420df93ec85d 594-595
+tests/poison_button_spec.lua
+  s_7d15dada7060d6::t_061f462b12681f 616-643
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "552057a0642fb0d015f9275c51d13609d9da5eaa",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
