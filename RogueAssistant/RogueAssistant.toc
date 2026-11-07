@@ -27,5 +27,6 @@ Domain\TrackerModel.lua
 UI\ViewModelPoisons.lua
 UI\PoisonButton.lua
 UI\PoisonAlertsView.lua
+UI\ViewModelTracker.lua
 Core\Init.lua
 Commands\Slash.lua
