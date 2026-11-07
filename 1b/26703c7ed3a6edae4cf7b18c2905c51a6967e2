@@ -1,0 +1,25 @@
+.github/dependabot.yml
+  s_7d15dada7060d6::t_fc37722b4ce9a9 1-8
+.github/workflows/ci.yml
+  s_7d15dada7060d6::t_1d6cf448ae94ae 1-84
+.github/workflows/pr-title.yml
+  s_7d15dada7060d6::t_de5e1504b501ad 1-17
+.github/workflows/release.yml
+  s_7d15dada7060d6::t_2417c27ef54ac1 1-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "1b26703c7ed3a6edae4cf7b18c2905c51a6967e2",
+  "prompts": {},
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
