@@ -1,0 +1,28 @@
+tests/viewmodel_poisons_spec.lua
+  s_7d15dada7060d6::t_e394efd08c6b10 1-137
+RogueAssistant/UI/ViewModelPoisons.lua
+  s_7d15dada7060d6::t_654d401e3c69f5 1-101
+RogueAssistant/RogueAssistant.toc
+  s_7d15dada7060d6::t_cdab684662c6a5 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "696858be9cb0ea3c4efc1a2de837b9c5c6fc950a",
+  "prompts": {},
+  "humans": {
+    "h_7d99c7b8818613": {
+      "author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  },
+  "sessions": {
+    "s_7d15dada7060d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6f7b1100-0b3b-418d-9c4a-495492829827",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
