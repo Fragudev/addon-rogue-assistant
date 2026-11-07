@@ -5,11 +5,13 @@
 --   WowStub.Remove(path)       the API is missing
 --   WowStub.Fail(path)         the API raises
 --   WowStub.Set(path, fn)      the API is `fn`
---   WowStub.Secret             a value issecretvalue() reports as secret
+--   WowStub.Secret             a value issecretvalue() reports as secret; it may sit in any field of a returned table
 
 local WowStub = {}
 -- A secret raises on everything the client forbids: arithmetic, ordering comparisons, length, indexing and calls.
--- Equality (==) and type() stay legal, as in the client.
+-- type() stays legal. Equality is forbidden too (__eq raises) so a spec can detect code that compares a client value
+-- before checking it: Lua only runs __eq between two tables sharing the metamethod, so a spec that wants the strict
+-- check gives the compared sentinel this metatable (WowStub.MakeStrict).
 local function forbidden()
   error("attempt to use a secret value", 2)
 end
@@ -26,11 +28,17 @@ WowStub.Secret = setmetatable({}, {
   __unm = forbidden,
   __lt = forbidden,
   __le = forbidden,
+  __eq = forbidden,
   __len = forbidden,
   __call = forbidden,
   __index = forbidden,
   __newindex = forbidden,
 })
+
+-- Gives `sentinel` (a table) the secret metatable: every == against another secret-like table now raises.
+function WowStub.MakeStrict(sentinel)
+  return setmetatable(sentinel, getmetatable(WowStub.Secret))
+end
 
 -- Stands in for a DurationObject: an opaque table that only widgets may consume.
 function WowStub.DurationObject(label)
@@ -152,6 +160,14 @@ local function newFrame(frameType, name, parent, template)
 
   function frame:RegisterEvent(event)
     self.events[event] = true
+  end
+  function frame:RegisterUnitEvent(event, ...)
+    self.events[event] = true
+    self.unitEvents = self.unitEvents or {}
+    self.unitEvents[event] = { ... }
+  end
+  function frame:SetStatusBarTexture(texture)
+    self.statusBarTexture = texture
   end
   function frame:UnregisterEvent(event)
     self.events[event] = nil
@@ -337,7 +353,7 @@ local function defaults()
       return "enUS"
     end,
     ["issecretvalue"] = function(value)
-      return value == WowStub.Secret
+      return rawequal(value, WowStub.Secret)
     end,
     ["UnitClass"] = function()
       return unpack(state.class)

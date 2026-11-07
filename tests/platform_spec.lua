@@ -194,6 +194,16 @@ describe("Platform", function()
       assert.are.equal(WowStub.Secret, P.GetSpellCooldownDurationObject(9))
     end)
 
+    it("asks for the cooldown duration ignoring the global cooldown", function()
+      local seen
+      WowStub.Set("C_Spell.GetSpellCooldownDuration", function(...)
+        seen = { ... }
+        return {}
+      end)
+      P.GetSpellCooldownDurationObject(9)
+      assert.are.same({ 9, true }, seen)
+    end)
+
     it("gives nil for the duration object when missing or failing", function()
       WowStub.Fail("C_Spell.GetSpellCooldownDuration")
       assert.is_nil(P.GetSpellCooldownDurationObject(9))
@@ -522,6 +532,79 @@ describe("Platform", function()
       }))
       WowStub.Remove("Settings.OpenToCategory")
       assert.is_false(P.OpenSettingsCategory(7))
+    end)
+  end)
+
+  describe("secret fields inside returned tables", function()
+    local secret
+
+    before_each(function()
+      -- Any == between the sentinel and a secret now raises, as the strict client could.
+      WowStub.MakeStrict(P.SECRET)
+      secret = WowStub.Secret
+    end)
+
+    it("detects an equality test against a secret", function()
+      local other = WowStub.MakeStrict({})
+      assert.has_error(function()
+        return secret == other
+      end)
+    end)
+
+    it("reads spell info, cooldown and charges without comparing secret fields", function()
+      WowStub.Set("C_Spell.GetSpellInfo", function()
+        return { name = secret, iconID = secret }
+      end)
+      WowStub.Set("GetSpellInfo", function()
+        return "Legacy", "x", 5
+      end)
+      assert.are.equal("Legacy", (P.GetSpellInfo(1)))
+      WowStub.state.cooldowns[1] = { startTime = secret, duration = 3, isEnabled = secret }
+      local start, duration, enabled = P.GetSpellCooldown(1)
+      assert.is_nil(start)
+      assert.are.equal(3, duration)
+      assert.is_nil(enabled)
+      WowStub.state.cooldowns[1] = { startTime = 1, duration = 2, isEnabled = 0 }
+      assert.is_false(select(3, P.GetSpellCooldown(1)))
+      WowStub.state.charges[1] = { currentCharges = secret, maxCharges = secret }
+      assert.is_nil(P.GetSpellCharges(1))
+    end)
+
+    it("reads auras, bag items and spellbook entries with every field secret", function()
+      WowStub.state.auras.player = {
+        { name = secret, spellId = secret, icon = secret, applications = secret, duration = secret },
+      }
+      local aura = P.GetAuraByIndex("player", 1, "HELPFUL")
+      assert.is_nil(aura.name)
+      assert.is_nil(aura.icon)
+      assert.is_nil(aura.duration)
+      WowStub.state.bags = {
+        [0] = {
+          size = 1,
+          [1] = { itemID = 5, stackCount = secret, iconFileID = secret, hyperlink = secret },
+        },
+      }
+      local item = P.GetContainerItem(0, 1)
+      assert.are.equal(5, item.itemID)
+      assert.are.equal(1, item.stackCount)
+      assert.is_nil(item.icon)
+      assert.is_nil(item.link)
+      WowStub.state.spellbook = { { itemIndexOffset = 0, numSpellBookItems = 1 } }
+      WowStub.state.spellItems = { { spellID = 4, name = secret } }
+      local entries = P.GetSpellBookEntries()
+      assert.are.equal(4, entries[1].spellId)
+      assert.is_nil(entries[1].name)
+    end)
+
+    it("gives nil when the whole returned table is secret", function()
+      WowStub.Set("C_Spell.GetSpellCharges", function()
+        return secret
+      end)
+      assert.is_nil(P.GetSpellCharges(1))
+      WowStub.Set("C_Container.GetContainerItemInfo", function()
+        return secret
+      end)
+      assert.is_nil(P.GetContainerItem(0, 1))
     end)
   end)
 end)

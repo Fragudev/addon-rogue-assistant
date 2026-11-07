@@ -114,9 +114,10 @@ local function results(path, ...)
   return nil
 end
 
--- A value of the expected Lua type, or nil (a secret never matches).
+-- A value of the expected Lua type, or nil (a secret never matches). The raw value is never compared with ==: only
+-- type(), rawequal (no metamethods) and IsSecret touch it.
 local function typedValue(value, kind)
-  if value ~= SECRET and type(value) == kind then
+  if type(value) == kind and not rawequal(value, SECRET) and not Platform.IsSecret(value) then
     return value
   end
   return nil
@@ -167,10 +168,8 @@ end
 function Platform.GetSpellInfo(spellId)
   local info = first("table", "C_Spell.GetSpellInfo", spellId)
   if info then
-    local name, icon = typedValue(info.name, "string"), info.iconID
-    if icon == SECRET or Platform.IsSecret(icon) then
-      icon = nil
-    end
+    local name = typedValue(info.name, "string")
+    local icon = typedValue(info.iconID, "number") or typedValue(info.iconID, "string")
     if name then
       return name, icon
     end
@@ -183,12 +182,11 @@ end
 function Platform.GetSpellCooldown(spellId)
   local info = first("table", "C_Spell.GetSpellCooldown", spellId)
   if info then
-    local enabled = info.isEnabled
-    if enabled ~= nil and typedValue(enabled, "boolean") == nil then
-      if typedValue(enabled, "number") then
-        enabled = enabled ~= 0
-      else
-        enabled = nil
+    local enabled = typedValue(info.isEnabled, "boolean")
+    if enabled == nil then
+      local flag = typedValue(info.isEnabled, "number")
+      if flag ~= nil then
+        enabled = flag ~= 0
       end
     end
     return typedValue(info.startTime, "number"), typedValue(info.duration, "number"), enabled
@@ -208,7 +206,8 @@ function Platform.GetSpellCooldownDurationObject(spellId)
   if not fn then
     return nil
   end
-  local ok, object = pcall(fn, spellId)
+  -- Second argument: ignoreGCD, so the global cooldown never shows as the spell cooldown.
+  local ok, object = pcall(fn, spellId, true)
   if ok then
     return object
   end
