@@ -125,7 +125,13 @@ function TrackerFrames:Container(group)
   container:SetFrameStrata("MEDIUM")
   container:SetClampedToScreen(true)
   container:SetMovable(true)
+  -- While unlocked the whole group shows a translucent backdrop (its handle carries the name).
+  container.moveBackground = container:CreateTexture(nil, "BACKGROUND")
+  container.moveBackground:SetAllPoints(container)
+  container.moveBackground:SetColorTexture(1, 0.96, 0.41, 0.2)
+  container.moveBackground:SetShown(self.unlocked)
   record = { id = group.id, container = container, slots = {}, handle = self:CreateHandle(container, group) }
+  record.handle:SetShown(self.unlocked)
   self.groups[group.id] = record
   return record
 end
@@ -288,6 +294,7 @@ function TrackerFrames:SetUnlocked(unlocked)
   self.unlocked = unlocked and true or false
   for _, record in pairs(self.groups) do
     record.handle:SetShown(self.unlocked)
+    record.container.moveBackground:SetShown(self.unlocked)
     -- Icons only take the mouse while unlocked, so they never swallow clicks meant for the world.
     for _, slot in ipairs(record.slots) do
       slot:EnableMouse(self.unlocked)

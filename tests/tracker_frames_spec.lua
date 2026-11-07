@@ -380,6 +380,29 @@ describe("TrackerFrames", function()
       assert.is_false(handle.shown)
     end)
 
+    it("shows a translucent backdrop over every group while unlocked", function()
+      for _, record in pairs(frames.groups) do
+        assert.is_false(record.container.moveBackground.shown)
+      end
+      bus:Publish("layout.unlock")
+      for _, record in pairs(frames.groups) do
+        assert.is_true(record.container.moveBackground.shown)
+      end
+      bus:Publish("layout.lock")
+      for _, record in pairs(frames.groups) do
+        assert.is_false(record.container.moveBackground.shown)
+      end
+    end)
+
+    it("shows the handle and backdrop of a group created while unlocked", function()
+      bus:Publish("layout.unlock")
+      local groups = model:Groups()
+      groups[#groups + 1] = { id = "late", kind = "buff", entries = {} }
+      frames:Refresh()
+      assert.is_true(frames.groups.late.handle.shown)
+      assert.is_true(frames.groups.late.container.moveBackground.shown)
+    end)
+
     it("saves the position of a group after a drag", function()
       bus:Publish("layout.unlock")
       local record = frames.groups.buffs
