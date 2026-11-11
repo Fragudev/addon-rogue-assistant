@@ -31,18 +31,16 @@ out of combat. For **World of Warcraft: Forever**.
 
 | Part | What it shows |
 |---|---|
-| Icon | The item on the weapon once the addon knows it, otherwise the weapon itself. Grey when nothing is applied. |
+| Icon | The weapon. Grey when nothing is applied. |
 | Above, left | The hand: **MH** (main hand) or **OH** (off hand). |
-| Above, right | The charges left, when the game reports any. |
-| Below | The time left: `1h`, `25m`, `4:05` or `42s`. |
+| Above, right | The charges left of the poison, when the game reports any. |
+| Below | The time left of the poison or stone: `1h`, `25m`, `4:05` or `42s`. |
 | Red glow | Nothing is applied (the button reads **Missing**) or less than 5 minutes are left. |
 
-The addon learns which item made an enchant when you apply it from the list, and remembers it. An item applied any other
-way shows the weapon icon until you apply it once with the addon.
+A weapon carries one temporary enchant at a time: applying a stone replaces the poison and the other way round, so the
+time and charges are always those of what is on the weapon now.
 
-An empty off hand shows the empty slot and never warns.
-
-Hovering a button shows which hand it is and how to use it, not the weapon's tooltip.
+An empty off hand shows the empty slot and never warns. The buttons have no tooltip.
 
 ## The item list
 
@@ -99,7 +97,7 @@ The menu works in combat, but unlocking and resetting the bar are refused until 
 ## When the game hides a value
 
 In arenas, battlegrounds and some encounters the game can hide a weapon's enchant from addons. The button then shows no
-timer and no warning, and its tooltip says the value is hidden. Applying items still works.
+timer and no warning. Applying items still works.
 
 ## Reporting a problem
 

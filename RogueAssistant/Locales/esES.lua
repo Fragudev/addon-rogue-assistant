@@ -6,8 +6,6 @@ ns.Locale.Register("esES", {
   ["slot.16.long"] = "Mano principal",
   ["slot.17.long"] = "Mano secundaria",
   ["button.missing"] = "Falta",
-  ["button.hint"] = "Clic: elige qué aplicar",
-  ["button.unknown"] = "El cliente oculta ahora el encantamiento de esta arma.",
   ["flyout.empty"] = "No llevas nada en las bolsas que sirva para esta arma.",
   ["handle.text"] = "Arrastra para mover",
 

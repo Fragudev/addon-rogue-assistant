@@ -6,8 +6,6 @@ ns.Locale.Register("enUS", {
   ["slot.16.long"] = "Main hand",
   ["slot.17.long"] = "Off hand",
   ["button.missing"] = "Missing",
-  ["button.hint"] = "Click: choose what to apply",
-  ["button.unknown"] = "The client hides this weapon's enchant right now.",
   ["flyout.empty"] = "Nothing in your bags fits this weapon.",
   ["handle.text"] = "Drag to move",
 

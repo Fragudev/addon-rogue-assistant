@@ -132,14 +132,8 @@ function Bar.OnCombatEnded()
   end
 end
 
--- The icon of a weapon button: the item that made the enchant when known, else the weapon, else the empty slot.
-function Bar.IconFor(slot, state)
-  if state.itemID then
-    local icon = Api.GetItemIcon(state.itemID)
-    if icon then
-      return icon
-    end
-  end
+-- The icon of a weapon button: the weapon, or the empty slot.
+function Bar.IconFor(slot)
   return Api.GetEquippedTexture(slot) or EMPTY_SLOT_ICON[slot]
 end
 
@@ -161,7 +155,7 @@ function Bar.Tick(now)
       warnSeconds = Bar.db.warnMinutes * 60,
       enchants = Bar.db.enchants,
     })
-    WeaponButton.Render(Bar.buttons[slot], state, Bar.IconFor(slot, state))
+    WeaponButton.Render(Bar.buttons[slot], state, Bar.IconFor(slot))
   end
 end
 

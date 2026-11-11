@@ -1,6 +1,7 @@
 local _, ns = ...
 
--- One button per weapon. It shows what the weapon carries (icon, time left, charges, warning) and opens its flyout.
+-- One button per weapon: the weapon's icon with the time left and the charges of what is applied (a poison or a stone;
+-- a weapon carries one at a time), a warning, and a click that opens its flyout. It has no tooltip.
 --
 -- The button is a SecureHandlerClickTemplate: its click runs a restricted snippet that shows or hides the flyout, which
 -- the client allows in combat. Opening one flyout closes the other.
@@ -25,26 +26,6 @@ local TOGGLE = [[
   end
   flyout:Show()
 ]]
-
-local function showTooltip(button)
-  if type(GameTooltip) ~= "table" then
-    return
-  end
-  -- A short hint only: the weapon's own tooltip is not needed here.
-  GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-  GameTooltip:SetText(L("slot." .. button.slot .. ".long"))
-  if button.state and button.state.status == "unknown" then
-    GameTooltip:AddLine(L("button.unknown"), 1, 0.3, 0.3, true)
-  end
-  GameTooltip:AddLine(L("button.hint"), 0.4, 0.8, 1)
-  GameTooltip:Show()
-end
-
-local function hideTooltip()
-  if type(GameTooltip) == "table" then
-    GameTooltip:Hide()
-  end
-end
 
 local function text(button, point, relativePoint, x, y)
   local fontString = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -85,8 +66,6 @@ function WeaponButton.Create(parent, slot)
   button.missing:SetTextColor(1, 0.25, 0.25)
   button.missing:Hide()
 
-  button:SetScript("OnEnter", showTooltip)
-  button:SetScript("OnLeave", hideTooltip)
   return button
 end
 

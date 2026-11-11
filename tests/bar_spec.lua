@@ -123,7 +123,7 @@ describe("Bar", function()
     assert.same({ { 2871, "3", "item:2871", false } }, shownRows(16))
   end)
 
-  it("shows time, charges and the applied item once learned", function()
+  it("shows the weapon icon with the time and charges of what is applied", function()
     WowStub.Click(flyout(16).rows[1])
     state.time = 1003
     state.weapon = { true, 1800000, 40, 625, false, 0, 0, 0 }
@@ -131,7 +131,8 @@ describe("Bar", function()
     local button = weapon(16)
     assert.equal("30m", button.timer:GetText())
     assert.equal("40", button.charges:GetText())
-    assert.equal("icon-8928", button.icon:GetTexture())
+    assert.equal("weapon-1001", button.icon:GetTexture())
+    assert.is_false(button.icon.desaturated)
     assert.is_false(button.glow:IsShown())
     assert.equal(8928, RogueAssistantDB.enchants[625])
   end)
@@ -182,21 +183,11 @@ describe("Bar", function()
     assert.equal(7, RogueAssistantDB.warnMinutes)
   end)
 
-  it("shows a short hint on hover, not the weapon tooltip", function()
-    weapon(16).scripts.OnEnter(weapon(16))
-    assert.is_nil(GameTooltip.inventorySlots)
-    assert.same({ "Main hand", "Click: choose what to apply" }, GameTooltip.lines)
-  end)
-
-  it("says on hover when the client hides the enchant", function()
-    state.weapon = { WowStub.Secret, 0, 0, 0, false, 0, 0, 0 }
-    WowStub.Update(0.3)
-    weapon(16).scripts.OnEnter(weapon(16))
-    assert.same({
-      "Main hand",
-      "The client hides this weapon's enchant right now.",
-      "Click: choose what to apply",
-    }, GameTooltip.lines)
+  it("shows no tooltip on hover", function()
+    for _, slot in ipairs({ 16, 17 }) do
+      assert.is_nil(weapon(slot).scripts.OnEnter)
+      assert.is_nil(weapon(slot).scripts.OnLeave)
+    end
   end)
 
   it("covers the buttons with a drag zone only while unlocked", function()

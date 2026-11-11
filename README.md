@@ -19,15 +19,15 @@
 
 ## What it does
 
-- **Two weapon buttons**, main hand (MH) and off hand (OH). Each shows what the weapon carries.
+- **Two weapon buttons**, main hand (MH) and off hand (OH), each with the weapon's icon and no tooltip.
 - **Click a weapon** to open the list of what you can put on it: the poisons, sharpening stones, weightstones and
   weapon oils in your bags, strongest first, with how many you have. Sharpening stones are offered only for edged
   weapons and weightstones only for blunt ones.
 - **Click an item** in the list to apply it to that weapon. The list closes.
 - **In combat too.** Opening the list and applying an item work in combat. The game does not let addons change the list
   in combat, so it is rebuilt when the fight ends; meanwhile the counts still update and a spent item is greyed out.
-- **Timer and charges.** Under each button, the time left on the weapon; above it, the charges when the game reports
-  them.
+- **Timer and charges.** Under each button, the time left of the poison or stone; above it, the poison charges when
+  the game reports them. A weapon carries one of them at a time.
 - **Warning.** A red glow when a weapon has nothing applied ("Missing") or less than 5 minutes left (`/ras warn`).
 - **Movable.** `/ras unlock` highlights an area over the buttons to drag the bar; `/ras lock` hides it and only the
   buttons are left. The bar always starts locked.

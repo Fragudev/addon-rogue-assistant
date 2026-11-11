@@ -23,7 +23,7 @@ Forever**.
 
 - **Time left** under each weapon and **charges** above it.
 - **Red glow** when a weapon has nothing applied or less than 5 minutes left (adjustable with `/ras warn`).
-- The icon shows the item on the weapon once the addon has applied it.
+- Each button shows the weapon's icon.
 
 ## Commands
 
