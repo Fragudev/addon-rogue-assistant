@@ -3,9 +3,8 @@
 Two buttons, one per weapon, that apply poisons, sharpening stones, weightstones and weapon oils from your bags, in or
 out of combat. For **World of Warcraft: Forever**.
 
-> **Beta, not verified in game.** The addon is covered by automated tests, but nothing has been tested on a live
-> Forever client yet. The item ids are Classic Era ids (see [API_NOTES.md](API_NOTES.md)); if something in your bags
-> is not offered, that is the first suspect: run `/ras debug bags` and report the ids.
+> The item ids are Classic Era ids (see [API_NOTES.md](API_NOTES.md)); if something in your bags is not offered,
+> that is the first suspect: run `/ras debug bags` and report the ids.
 
 ## Contents
 

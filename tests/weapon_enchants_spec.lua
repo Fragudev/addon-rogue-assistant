@@ -34,9 +34,9 @@ describe("WeaponEnchants", function()
         "Almost gone (45 sec)",
       }
       assert.same({
-        { name = "Instant Poison VI", seconds = 1800 },
-        { name = "Sharpened (+8 Damage)", seconds = 3600 },
-        { name = "Almost gone", seconds = 45 },
+        { name = "Instant Poison VI", seconds = 1800, step = 60 },
+        { name = "Sharpened (+8 Damage)", seconds = 3600, step = 3600 },
+        { name = "Almost gone", seconds = 45, step = 1 },
       }, WeaponEnchants.ParseTooltip(lines, units))
     end)
 
@@ -50,8 +50,8 @@ describe("WeaponEnchants", function()
         "Durability 81 / 90",
       }
       assert.same({
-        { name = "Weighted +6", seconds = 1800 },
-        { name = "Instant Poison", seconds = 1680, charges = 60 },
+        { name = "Weighted +6", seconds = 1800, step = 60 },
+        { name = "Instant Poison", seconds = 1680, step = 60, charges = 60 },
       }, WeaponEnchants.ParseTooltip(lines, units))
     end)
 

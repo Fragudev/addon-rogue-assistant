@@ -38,6 +38,10 @@ They must be measured again on the live client (launch was 2026-11-05).
   text is a poison item name (`C_Item.GetItemNameByID`), and a stone otherwise; oils count as stones. The API enchant
   then replaces the row of its kind with its exact time and charges: a poison when the addon learned that its enchant
   id came from a poison, or else when it has charges.
+- **Seconds of a tooltip row.** The tooltip rounds the time left up: the poison above had 1669925 ms (27:49) and showed
+  `28 min`. So the moment a reading drops (30 → 29 min), exactly 29:00 is left. A clock in `WeaponEnchants` remembers
+  when each reading started and counts seconds down from it, never below the reading minus one unit. After a reload the
+  first minute can be off by up to 59 seconds, until the reading drops once.
 
 ### Item ids (`Data/Items.lua`)
 
