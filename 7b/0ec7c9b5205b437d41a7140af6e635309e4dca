@@ -1,0 +1,53 @@
+.luacheckrc
+  s_8e661c4730a852::t_3c55d0b2287eaf 16,23,27
+README.md
+  s_8e661c4730a852::t_d7559cccd6b6ce 32-35,54-55,57
+RogueAssistant/Commands/Actions.lua
+  s_8e661c4730a852::t_c8a230b0e010f7 1-47
+RogueAssistant/Commands/Slash.lua
+  s_8e661c4730a852::t_86f2c30274ee9e 11,13,74,76,78-80
+RogueAssistant/Core/Constants.lua
+  s_8e661c4730a852::t_a6d3efbcf258d5 31-34
+RogueAssistant/Core/Init.lua
+  s_8e661c4730a852::t_f77c9f62dc7844 38
+RogueAssistant/Core/Store.lua
+  s_8e661c4730a852::t_3bca8be9a3802e 7-8,36-42
+RogueAssistant/Locales/enUS.lua
+  s_8e661c4730a852::t_eef9a70ee9f1ad 16,28-36
+RogueAssistant/Locales/esES.lua
+  s_8e661c4730a852::t_3ff340fd709b4c 16,28-36
+RogueAssistant/RogueAssistant.toc
+  s_8e661c4730a852::t_03e4ca993689bf 23-24
+RogueAssistant/UI/MinimapButton.lua
+  s_8e661c4730a852::t_e5f6f002211ce5 1-201
+docs/CURSEFORGE_DESCRIPTION.md
+  s_8e661c4730a852::t_233b0db962daf1 33-34
+docs/PRIVACY.md
+  s_8e661c4730a852::t_2fb75fc84d66eb 20
+docs/USER_GUIDE.md
+  s_8e661c4730a852::t_4ffcbdfb1102d0 17,65-68,72-82,88,90
+tests/bar_spec.lua
+  s_8e661c4730a852::t_bc077536d97cf6 185-201
+tests/core_spec.lua
+  s_8e661c4730a852::t_b838e7e55d71db 55,65-66,68-74
+tests/minimap_spec.lua
+  s_8e661c4730a852::t_9489fb268b7cd6 1-152
+tests/stubs/wow_api.lua
+  s_8e661c4730a852::t_296ea5c2e98cd9 137-154,213,351-358
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "7b0ec7c9b5205b437d41a7140af6e635309e4dca",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
