@@ -1,0 +1,29 @@
+README.md
+  s_8e661c4730a852::t_69846da1dbfe48 22,29-30
+RogueAssistant/UI/Bar.lua
+  s_8e661c4730a852::t_19f3e76c31dbda 135-136,158
+RogueAssistant/UI/WeaponButton.lua
+  s_8e661c4730a852::t_fbc20d4ed3f7cc 3-4
+docs/CURSEFORGE_DESCRIPTION.md
+  s_8e661c4730a852::t_f62c8b357fb1d7 26
+docs/USER_GUIDE.md
+  s_8e661c4730a852::t_b0d29e0fa53531 34,36-37,40-41,43,100
+tests/bar_spec.lua
+  s_8e661c4730a852::t_8905372a16b5b3 126,134-135,186-190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "35f5ac987779d6c79c61fb8e0b4cd0b8accc0427",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
