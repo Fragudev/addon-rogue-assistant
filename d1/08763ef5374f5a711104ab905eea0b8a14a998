@@ -1,0 +1,43 @@
+README.md
+  s_8e661c4730a852::t_bf7a2d3a3ca7f0 29-31
+RogueAssistant/Commands/Slash.lua
+  s_8e661c4730a852::t_8570c8faa8e3ae 49,54-58
+RogueAssistant/Core/Api.lua
+  s_8e661c4730a852::t_1490640d3b423c 122-124,133-138,144-168
+RogueAssistant/Domain/WeaponEnchants.lua
+  s_8e661c4730a852::t_17747ef42d0290 1-138
+RogueAssistant/Domain/WeaponState.lua
+  s_8e661c4730a852::t_2b584a2d73a4df 10-12,17-21,25-34
+RogueAssistant/RogueAssistant.toc
+  s_8e661c4730a852::t_87855ca27afa96 19
+RogueAssistant/UI/Bar.lua
+  s_8e661c4730a852::t_db9accb1b28535 12-13,27,142-161,167,176,180
+RogueAssistant/UI/WeaponButton.lua
+  s_8e661c4730a852::t_eeb7ec908d15a9 3-5,15-22,72-82,104-113
+docs/API_NOTES.md
+  s_8e661c4730a852::t_a32e971e61fb0c 34-42
+docs/USER_GUIDE.md
+  s_8e661c4730a852::t_e7737b442ef753 36-43
+tests/bar_spec.lua
+  s_8e661c4730a852::t_00e6e5d440e31f 132,140-168,183-184,197,199,205,207
+tests/weapon_enchants_spec.lua
+  s_8e661c4730a852::t_a08baa43a7eb74 1-110
+tests/weapon_state_spec.lua
+  s_8e661c4730a852::t_48499e7eceff3f 10,14-16,31-39,42-46,51-52,55-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d108763ef5374f5a711104ab905eea0b8a14a998",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
