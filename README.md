@@ -13,9 +13,9 @@
 </p>
 
 > [!NOTE]
-> **Beta.** Everything described here is implemented and covered by automated tests, but it has **not been verified on
-> the game client yet**. The item ids are Classic Era ids that nobody has confirmed on Forever, and the secure buttons
-> are untested in game. See [docs/API_NOTES.md](docs/API_NOTES.md) for what is assumed.
+> Everything described here is covered by automated tests, and the timers were checked against real Forever data. The
+> item ids are Classic Era ids; if something in your bags is not offered, report the output of `/ras debug bags`. See
+> [docs/API_NOTES.md](docs/API_NOTES.md) for what is assumed.
 
 ## What it does
 

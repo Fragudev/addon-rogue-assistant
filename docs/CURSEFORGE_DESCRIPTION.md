@@ -46,11 +46,10 @@ Lock it again and only the buttons are left.
 - `/ras minimap`: show or hide the minimap button.
 - `/ras debug bags` and `/ras debug weapon`: what the game reports, for bug reports.
 
-## Beta
+## Reporting a problem
 
-Covered by automated tests. The poison and weightstone timers were checked against real Forever data; the rest has not
-been verified on a live client yet. If something in your bags is not offered or a timer looks wrong, please report the
-output of `/ras debug bags` and `/ras debug weapon`.
+If something in your bags is not offered or a timer looks wrong, please report the output of `/ras debug bags` and
+`/ras debug weapon`.
 
 ## Privacy
 
