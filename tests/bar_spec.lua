@@ -1,0 +1,205 @@
+describe("Bar", function()
+  local ns, state
+
+  local function flyout(slot)
+    return _G["RogueAssistantFlyout" .. slot]
+  end
+
+  local function weapon(slot)
+    return _G["RogueAssistantWeapon" .. slot]
+  end
+
+  local function shownRows(slot)
+    local items = {}
+    for _, row in ipairs(flyout(slot).rows) do
+      if row:IsShown() then
+        items[#items + 1] = { row.itemID, row.count:GetText(), row:GetAttribute("item"), row.icon.desaturated }
+      end
+    end
+    return items
+  end
+
+  before_each(function()
+    WowStub.Reset()
+    state = WowStub.state
+    state.items[2000] = { classID = 2, subclassID = 4 } -- a mace
+    WowStub.SetBag({ { 8928, 10 }, { 2871, 3 }, { 3241, 2 }, { 6948, 1 } })
+    ns = WowStub.LoadAddon()
+  end)
+
+  it("builds both weapon buttons with hidden flyouts and a fresh saved table", function()
+    assert.is_table(weapon(16))
+    assert.is_table(weapon(17))
+    assert.is_false(flyout(16):IsShown())
+    assert.is_false(flyout(17):IsShown())
+    assert.equal(2, RogueAssistantDB.version)
+    assert.same({ "CENTER", UIParent, "CENTER", 0, -180 }, { ns.Bar.anchor:GetPoint() })
+  end)
+
+  it("lists the bag items that fit each weapon, strongest poison first", function()
+    assert.same({
+      { 8928, "10", "item:8928", false },
+      { 2871, "3", "item:2871", false },
+    }, shownRows(16))
+    for _, row in ipairs(flyout(16).rows) do
+      assert.equal(16, row:GetAttribute("target-slot"))
+      assert.equal("item", row:GetAttribute("type"))
+    end
+  end)
+
+  it("lists weightstones and not sharpening stones for a mace", function()
+    state.equipment[17] = 2000
+    WowStub.Fire("PLAYER_EQUIPMENT_CHANGED", 17, false)
+    assert.same({
+      { 8928, "10", "item:8928", false },
+      { 3241, "2", "item:3241", false },
+    }, shownRows(17))
+  end)
+
+  it("shows the empty text when nothing fits", function()
+    state.equipment[17] = nil
+    WowStub.Fire("PLAYER_EQUIPMENT_CHANGED", 17, true)
+    assert.same({}, shownRows(17))
+    assert.is_true(flyout(17).empty:IsShown())
+    assert.is_false(flyout(16).empty:IsShown())
+  end)
+
+  it("toggles a flyout with a click and closes the other one, also in combat", function()
+    state.inCombat = true
+    WowStub.Click(weapon(16))
+    assert.is_true(flyout(16):IsShown())
+    WowStub.Click(weapon(17))
+    assert.is_false(flyout(16):IsShown())
+    assert.is_true(flyout(17):IsShown())
+    WowStub.Click(weapon(17))
+    assert.is_false(flyout(17):IsShown())
+    assert.same({}, state.violations)
+  end)
+
+  it("applies the clicked item to its weapon slot and closes the flyout, also in combat", function()
+    WowStub.Click(weapon(17))
+    state.inCombat = true
+    WowStub.Click(flyout(17).rows[1])
+    assert.same({ { type = "item", item = "item:8928", slot = 17 } }, state.actions)
+    assert.is_false(flyout(17):IsShown())
+    assert.same({}, state.violations)
+  end)
+
+  it("updates counts in combat and rebuilds the list when the fight ends", function()
+    state.inCombat = true
+    WowStub.SetBag({ { 2871, 3 } })
+    WowStub.Fire("BAG_UPDATE_DELAYED")
+    assert.same({
+      { 8928, "0", "item:8928", true },
+      { 2871, "3", "item:2871", false },
+    }, shownRows(16))
+    assert.same({}, state.violations)
+
+    state.inCombat = false
+    WowStub.Fire("PLAYER_REGEN_ENABLED")
+    assert.same({ { 2871, "3", "item:2871", false } }, shownRows(16))
+  end)
+
+  it("shows time, charges and the applied item once learned", function()
+    WowStub.Click(flyout(16).rows[1])
+    state.time = 1003
+    state.weapon = { true, 1800000, 40, 625, false, 0, 0, 0 }
+    WowStub.Update(0.3)
+    local button = weapon(16)
+    assert.equal("30m", button.timer:GetText())
+    assert.equal("40", button.charges:GetText())
+    assert.equal("icon-8928", button.icon:GetTexture())
+    assert.is_false(button.glow:IsShown())
+    assert.equal(8928, RogueAssistantDB.enchants[625])
+  end)
+
+  it("shows the weapon icon while the enchant item is not known", function()
+    state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
+    WowStub.Update(0.3)
+    assert.equal("weapon-1001", weapon(16).icon:GetTexture())
+    assert.equal("", weapon(16).charges:GetText())
+  end)
+
+  it("warns when a weapon has nothing or little time left", function()
+    state.weapon = { true, 120000, 0, 625, false, 0, 0, 0 }
+    WowStub.Update(0.3)
+    assert.is_true(weapon(16).glow:IsShown())
+    assert.is_false(weapon(16).missing:IsShown())
+    assert.is_true(weapon(17).glow:IsShown())
+    assert.is_true(weapon(17).missing:IsShown())
+    assert.equal("", weapon(17).timer:GetText())
+  end)
+
+  it("does not warn for an empty off hand and shows the empty slot icon", function()
+    state.equipment[17] = nil
+    WowStub.Update(0.3)
+    assert.is_false(weapon(17).glow:IsShown())
+    assert.equal("Interface\\PaperDoll\\UI-PaperDoll-Slot-SecondaryHand", weapon(17).icon:GetTexture())
+  end)
+
+  it("reads the weapons only every tick", function()
+    state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
+    WowStub.Update(0.1)
+    assert.equal("", weapon(16).timer:GetText())
+    WowStub.Update(0.2)
+    assert.equal("30m", weapon(16).timer:GetText())
+  end)
+
+  it("redraws on an inventory change of the player only", function()
+    state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
+    WowStub.Fire("UNIT_INVENTORY_CHANGED", "target")
+    assert.equal("", weapon(16).timer:GetText())
+    WowStub.Fire("UNIT_INVENTORY_CHANGED", "player")
+    assert.equal("30m", weapon(16).timer:GetText())
+  end)
+
+  it("ignores ADDON_LOADED of other addons", function()
+    _G.RogueAssistantDB = { version = 2, warnMinutes = 7, enchants = {} }
+    WowStub.Fire("ADDON_LOADED", "OtherAddon")
+    assert.equal(7, RogueAssistantDB.warnMinutes)
+  end)
+
+  it("moves, saves and resets its position", function()
+    assert.is_true(ns.Bar.SetUnlocked(true))
+    assert.is_true(ns.Bar.handle:IsShown())
+    ns.Bar.handle.scripts.OnDragStart()
+    assert.is_true(ns.Bar.anchor.moving)
+    ns.Bar.anchor.points = { { "TOPLEFT", UIParent, "TOPLEFT", 50, -60 } }
+    ns.Bar.handle.scripts.OnDragStop()
+    assert.same({ point = "TOPLEFT", relativePoint = "TOPLEFT", x = 50, y = -60 }, RogueAssistantDB.position)
+    assert.is_true(ns.Bar.ResetPosition())
+    assert.is_nil(RogueAssistantDB.position)
+    assert.same({ "CENTER", UIParent, "CENTER", 0, -180 }, { ns.Bar.anchor:GetPoint() })
+  end)
+
+  it("refuses to move or unlock in combat", function()
+    state.inCombat = true
+    assert.is_false(ns.Bar.SetUnlocked(true))
+    assert.is_false(ns.Bar.ResetPosition())
+    ns.Bar.handle.scripts.OnDragStart()
+    assert.is_falsy(ns.Bar.anchor.moving)
+  end)
+end)
+
+describe("Bar loaded in combat", function()
+  before_each(function()
+    WowStub.Reset()
+  end)
+
+  it("waits for the end of combat to build the bar, then restores the saved position", function()
+    WowStub.state.inCombat = true
+    _G.RogueAssistantDB = {
+      version = 2,
+      warnMinutes = 5,
+      enchants = {},
+      position = { point = "TOP", relativePoint = "TOP", x = 0, y = -50 },
+    }
+    local ns = WowStub.LoadAddon()
+    assert.is_nil(_G.RogueAssistantWeapon16)
+    WowStub.state.inCombat = false
+    WowStub.Fire("PLAYER_REGEN_ENABLED")
+    assert.is_table(_G.RogueAssistantWeapon16)
+    assert.same({ "TOP", UIParent, "TOP", 0, -50 }, { ns.Bar.anchor:GetPoint() })
+    assert.same({}, WowStub.state.violations)
+  end)
+end)
