@@ -1,7 +1,8 @@
 local _, ns = ...
 
--- One button per weapon: the weapon's icon with the time left and the charges of what is applied (a poison or a stone;
--- a weapon carries one at a time), a warning, and a click that opens its flyout. It has no tooltip.
+-- One button per weapon: the weapon's icon with the time left and the charges GetWeaponEnchantInfo reports, a warning,
+-- and a click that opens its flyout. It has no tooltip. On Forever a weapon can carry a poison and a stone at once;
+-- how the client reports both is not measured yet (docs/API_NOTES.md), so the button shows the one enchant it reports.
 --
 -- The button is a SecureHandlerClickTemplate: its click runs a restricted snippet that shows or hides the flyout, which
 -- the client allows in combat. Opening one flyout closes the other.

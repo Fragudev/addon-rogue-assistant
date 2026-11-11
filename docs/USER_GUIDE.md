@@ -33,12 +33,13 @@ out of combat. For **World of Warcraft: Forever**.
 |---|---|
 | Icon | The weapon. Grey when nothing is applied. |
 | Above, left | The hand: **MH** (main hand) or **OH** (off hand). |
-| Above, right | The charges left of the poison, when the game reports any. |
-| Below | The time left of the poison or stone: `1h`, `25m`, `4:05` or `42s`. |
+| Above, right | The charges left, when the game reports any. |
+| Below | The time left: `1h`, `25m`, `4:05` or `42s`. |
 | Red glow | Nothing is applied (the button reads **Missing**) or less than 5 minutes are left. |
 
-A weapon carries one temporary enchant at a time: applying a stone replaces the poison and the other way round, so the
-time and charges are always those of what is on the weapon now.
+On Forever a weapon can carry a poison and a stone at the same time. The button shows the one enchant the game reports
+for that hand; showing both is pending until we know how the game reports them. If you have both on a weapon, the
+output of `/ras debug weapon` helps (see [Reporting a problem](#reporting-a-problem)).
 
 An empty off hand shows the empty slot and never warns. The buttons have no tooltip.
 
@@ -90,7 +91,7 @@ The menu works in combat, but unlocking and resetting the bar are refused until 
 | `/ras minimap` | Shows or hides the minimap button. |
 | `/ras warn <minutes>` | The warning threshold, 0 to 60 minutes (default 5). With 0 it warns only when nothing is applied. |
 | `/ras debug bags` | Every item in your bags: id, count, name and, when the addon knows it, its kind. |
-| `/ras debug weapon` | What the game reports about both weapon enchants. |
+| `/ras debug weapon` | What the game reports about both weapon enchants: every raw value and the weapon tooltip lines. |
 
 `/rogueassistant` works as well.
 

@@ -43,7 +43,26 @@ local function debugBags()
   end
 end
 
+local function debugTooltips()
+  for _, slot in ipairs(C.SLOTS) do
+    local hand = L("slot." .. slot .. ".long")
+    local lines = Api.GetInventoryTooltipLines(slot)
+    if not lines then
+      Api.Print(L("debug.tooltip.none", hand))
+    else
+      for _, line in ipairs(lines) do
+        Api.Print(L("debug.tooltip.line", hand, line))
+      end
+    end
+  end
+end
+
 local function debugWeapon()
+  local raw = Api.GetWeaponEnchantRaw()
+  if raw then
+    Api.Print(string.format("GetWeaponEnchantInfo (%d): %s", #raw, table.concat(raw, ", ")))
+  end
+  debugTooltips()
   local enchants = Api.GetWeaponEnchants()
   if not enchants then
     Api.Print(L("debug.weapon.none"))

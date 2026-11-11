@@ -92,6 +92,53 @@ function Api.GetWeaponEnchants()
   }
 end
 
+-- Keeps trailing nils, which {...} would drop.
+local function pack(...)
+  return { n = select("#", ...), ... }
+end
+
+local function show(value)
+  if isSecret(value) then
+    return "<secret>"
+  end
+  return tostring(value)
+end
+
+-- Every value GetWeaponEnchantInfo returns, as text ("<secret>" for a hidden one), or nil when it is missing or
+-- raises. For diagnostics: Forever lets a weapon carry a poison and a stone at once, and how the client reports both is
+-- not measured yet.
+function Api.GetWeaponEnchantRaw()
+  local results = pack(try(GetWeaponEnchantInfo))
+  if not results[1] then
+    return nil
+  end
+  local values = {}
+  for index = 2, results.n do
+    values[#values + 1] = show(results[index])
+  end
+  return values
+end
+
+-- The text lines of the tooltip of the item in `slot` ("left | right"), or nil when the client gives none.
+function Api.GetInventoryTooltipLines(slot)
+  local tooltips = namespace("C_TooltipInfo")
+  local ok, data = try(tooltips and tooltips.GetInventoryItem, "player", slot)
+  if not ok or type(data) ~= "table" or type(data.lines) ~= "table" then
+    return nil
+  end
+  local lines = {}
+  for _, line in ipairs(data.lines) do
+    if type(line) == "table" then
+      local text = show(line.leftText)
+      if line.rightText ~= nil and line.rightText ~= "" then
+        text = text .. " | " .. show(line.rightText)
+      end
+      lines[#lines + 1] = text
+    end
+  end
+  return lines
+end
+
 -- The item id equipped in `slot`, false when the slot is empty, nil when the client cannot tell.
 function Api.GetEquippedItemID(slot)
   local ok, itemID = try(GetInventoryItemID, "player", slot)

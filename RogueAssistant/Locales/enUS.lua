@@ -37,6 +37,8 @@ ns.Locale.Register("enUS", {
   ["debug.bags.header"] = "Bag items (id x count, name, kind):",
   ["debug.bags.none"] = "No items found in the bags.",
   ["debug.weapon.line"] = "%s: active=%s, ms=%s, charges=%s, enchantID=%s, itemID=%s",
+  ["debug.tooltip.line"] = "%s tooltip: %s",
+  ["debug.tooltip.none"] = "%s tooltip: unavailable",
   ["debug.weapon.none"] = "GetWeaponEnchantInfo gave nothing.",
 
   ["kind.poison"] = "poison",

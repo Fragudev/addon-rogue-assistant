@@ -406,7 +406,7 @@ function WowStub.Reset()
     return state.locale
   end
   _G.GetWeaponEnchantInfo = function()
-    return unpackValues(state.weapon, 1, 8)
+    return unpackValues(state.weapon, 1, math.max(8, #state.weapon))
   end
   _G.GetInventoryItemID = function(_, slot)
     return state.equipment[slot]
@@ -428,6 +428,20 @@ function WowStub.Reset()
     end,
     GetItemIconByID = function(itemID)
       return "icon-" .. itemID
+    end,
+  }
+  state.tooltips = {}
+  _G.C_TooltipInfo = {
+    GetInventoryItem = function(_, slot)
+      local lines = state.tooltips[slot]
+      if not lines then
+        return nil
+      end
+      local data = { lines = {} }
+      for index, line in ipairs(lines) do
+        data.lines[index] = { leftText = line[1], rightText = line[2] }
+      end
+      return data
     end,
   }
   _G.C_Container = {

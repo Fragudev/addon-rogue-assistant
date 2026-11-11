@@ -37,6 +37,8 @@ ns.Locale.Register("esES", {
   ["debug.bags.header"] = "Objetos de las bolsas (id x cantidad, nombre, tipo):",
   ["debug.bags.none"] = "No hay objetos en las bolsas.",
   ["debug.weapon.line"] = "%s: activo=%s, ms=%s, cargas=%s, enchantID=%s, itemID=%s",
+  ["debug.tooltip.line"] = "Tooltip de %s: %s",
+  ["debug.tooltip.none"] = "Tooltip de %s: no disponible",
   ["debug.weapon.none"] = "GetWeaponEnchantInfo no ha devuelto nada.",
 
   ["kind.poison"] = "veneno",

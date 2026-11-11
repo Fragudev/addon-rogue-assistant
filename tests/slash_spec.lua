@@ -79,6 +79,18 @@ describe("Slash commands", function()
     assert.is_true(contains(run("debug weapon"), "gave nothing"))
   end)
 
+  it("prints every raw enchant value and the weapon tooltip lines, to measure poison plus stone", function()
+    WowStub.state.weapon = { true, 60000, 40, 625, false, 0, 0, 0, true, 1800000, 0, WowStub.Secret }
+    WowStub.state.tooltips[16] = { { "Bloodfang Dagger" }, { "Instant Poison VI (1 min)", "40 Charges" } }
+    local out = run("debug weapon")
+    assert.is_true(
+      contains(out, "GetWeaponEnchantInfo (12): true, 60000, 40, 625, false, 0, 0, 0, true, 1800000, 0, <secret>")
+    )
+    assert.is_true(contains(out, "Main hand tooltip: Bloodfang Dagger"))
+    assert.is_true(contains(out, "Main hand tooltip: Instant Poison VI (1 min) | 40 Charges"))
+    assert.is_true(contains(out, "Off hand tooltip: unavailable"))
+  end)
+
   it("answers in Spanish on a Spanish client", function()
     WowStub.Reset()
     WowStub.state.locale = "esES"

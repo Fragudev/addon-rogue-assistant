@@ -23,7 +23,15 @@ They must be measured again on the live client (launch was 2026-11-05).
   that does not exist or raises gives nil (unknown), never a guess. When `InCombatLockdown` cannot be read the addon
   assumes combat, so it never touches a secure frame by mistake.
 - `GetWeaponEnchantInfo` returns `hasMH, mhMs, mhCharges, mhEnchantId, hasOH, ohMs, ohCharges, ohEnchantId`. An enchant
-  id of 0 is treated as "no id". What it returns with a poison and a stone on the same weapon is unknown.
+  id of 0 is treated as "no id".
+- **Poison and stone on one weapon.** On Forever a weapon can carry a poison and a temporary enchant (sharpening stone,
+  weightstone) at the same time, each hand on its own (Forever class guides, for example
+  [wowfdb](https://wowfdb.com/classes/rogue/utility/) and
+  [conquestcapped](https://conquestcapped.com/guides/wow-forever/wow-forever-rogue-overview/), citing Blizzard's
+  changes). How the client reports both is **not measured**: `GetWeaponEnchantInfo` has one set of values per hand.
+  The second may come as extra return values or only in the weapon tooltip. `/ras debug weapon` prints every raw
+  value of `GetWeaponEnchantInfo` and the lines of `C_TooltipInfo.GetInventoryItem` for each hand: run it with a
+  poison and a stone on the same weapon to find out. Until then each button shows the one enchant the API reports.
 - `GetInventoryItemID("player", 17)` returns nil for an empty slot; `Api.GetEquippedItemID` turns that into `false`
   and keeps `nil` for "API missing, failing or secret".
 - `C_Item.GetItemInfoInstant` gives the weapon class (2) and subclass without a server query; the subclass decides which
