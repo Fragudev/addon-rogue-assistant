@@ -1,0 +1,33 @@
+RogueAssistant/Commands/Slash.lua
+  s_8e661c4730a852::t_f1ce223a41f100 1-106
+RogueAssistant/Core/Init.lua
+  s_8e661c4730a852::t_20ffae3b4d2187 1-72
+RogueAssistant/RogueAssistant.toc
+  s_8e661c4730a852::t_c80c4b2795d5b9 10,13-14,20-24
+RogueAssistant/UI/Bar.lua
+  s_8e661c4730a852::t_6e848ebf36c069 1-190
+RogueAssistant/UI/Flyout.lua
+  s_8e661c4730a852::t_121569366f44ae 1-141
+RogueAssistant/UI/WeaponButton.lua
+  s_8e661c4730a852::t_62e14167c84d27 1-117
+tests/bar_spec.lua
+  s_8e661c4730a852::t_b597fd926b1e48 1-205
+tests/slash_spec.lua
+  s_8e661c4730a852::t_2acf4b0fecf450 1-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "cc2318fce4562bde0b6046259b54b8d44b155802",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "unknown"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
