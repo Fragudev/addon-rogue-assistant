@@ -1,0 +1,27 @@
+README.md
+  s_8e661c4730a852::t_42e60966cfeb44 4-5,17-18,22-32,44,50-56,58,62-65
+docs/CURSEFORGE_DESCRIPTION.md
+  s_8e661c4730a852::t_f6f0e64a43288d 5,11-12,14,16-20,22,24-26,30-33,35,37-38,42
+docs/PRIVACY.md
+  s_8e661c4730a852::t_393d208129c9ac 11,20-21,23-24,32,36-37,41
+docs/USER_GUIDE.md
+  s_8e661c4730a852::t_e91ebeb0bbe7d9 3-4,7-8,13-16,24-25,27,29,31,33-37,39-40,42,44,46-53,55,57-60,62,64-66,68,74-81,85-86,90-92
+docs/API_NOTES.md
+  s_8e661c4730a852::t_51517cc0bc1b87 9-10,15-17,22-33,35,37-40,42,44-47,49,51-53,55-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "54a9da101712aaab58d4d4d94b063b831957916c",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
