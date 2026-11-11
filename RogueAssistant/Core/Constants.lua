@@ -28,6 +28,10 @@ local Constants = {
   -- The warning lights up when an enchant has less than this many minutes left (the player can change it).
   DEFAULT_WARN_MINUTES = 5,
   MAX_WARN_MINUTES = 60,
+
+  -- Minimap button: default angle (degrees, 0 = east, counter-clockwise) and distance outside the minimap edge.
+  DEFAULT_MINIMAP_ANGLE = 225,
+  MINIMAP_BUTTON_OFFSET = 10,
 }
 
 Constants.SLOTS = { Constants.SLOT_MAIN_HAND, Constants.SLOT_OFF_HAND }

@@ -134,6 +134,24 @@ end
 function Frame:GetSize()
   return self.width, self.height
 end
+function Frame:GetWidth()
+  return self.width
+end
+function Frame:GetCenter()
+  if self.center then
+    return self.center[1], self.center[2]
+  end
+  return nil
+end
+function Frame:SetFrameLevel(level)
+  self.level = level
+end
+function Frame:GetFrameLevel()
+  return self.level
+end
+function Frame:GetEffectiveScale()
+  return self.scale or 1
+end
 function Frame:ClearAllPoints()
   if not protectedChange(self, "ClearAllPoints") then
     self.points = {}
@@ -192,6 +210,7 @@ local function newFrame(frameType, name, parent, template)
     regions = {},
     points = {},
     shown = true,
+    level = type(parent) == "table" and (parent.level or 0) + 1 or 0,
   }, {
     __index = function(_, key)
       if Frame[key] then
@@ -329,6 +348,14 @@ function WowStub.Reset()
     return newFrame(frameType, name, parent, template)
   end
   _G.UIParent = newFrame("Frame", "UIParent")
+  _G.Minimap = newFrame("Frame", "Minimap", _G.UIParent)
+  _G.Minimap.width, _G.Minimap.height = 140, 140
+  _G.Minimap.center = { 1000, 700 }
+  _G.UISpecialFrames = {}
+  state.cursor = { 0, 0 }
+  _G.GetCursorPosition = function()
+    return state.cursor[1], state.cursor[2]
+  end
   _G.DEFAULT_CHAT_FRAME = {
     AddMessage = function(_, message)
       state.messages[#state.messages + 1] = message
@@ -338,6 +365,8 @@ function WowStub.Reset()
     __index = function(tooltip, key)
       if key == "SetInventoryItem" then
         return function(_, _, slot)
+          tooltip.inventorySlots = tooltip.inventorySlots or {}
+          tooltip.inventorySlots[#tooltip.inventorySlots + 1] = slot
           return state.equipment[slot] ~= nil
         end
       end
@@ -377,7 +406,7 @@ function WowStub.Reset()
     return state.locale
   end
   _G.GetWeaponEnchantInfo = function()
-    return unpackValues(state.weapon, 1, 8)
+    return unpackValues(state.weapon, 1, math.max(8, #state.weapon))
   end
   _G.GetInventoryItemID = function(_, slot)
     return state.equipment[slot]
@@ -399,6 +428,20 @@ function WowStub.Reset()
     end,
     GetItemIconByID = function(itemID)
       return "icon-" .. itemID
+    end,
+  }
+  state.tooltips = {}
+  _G.C_TooltipInfo = {
+    GetInventoryItem = function(_, slot)
+      local lines = state.tooltips[slot]
+      if not lines then
+        return nil
+      end
+      local data = { lines = {} }
+      for index, line in ipairs(lines) do
+        data.lines[index] = { leftText = line[1], rightText = line[2] }
+      end
+      return data
     end,
   }
   _G.C_Container = {

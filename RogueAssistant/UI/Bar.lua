@@ -1,7 +1,7 @@
 local _, ns = ...
 
--- The bar: both weapon buttons, their flyouts and the move handle. It reads the client through ns.Api and keeps every
--- change of a secure frame out of combat, deferring it to the end of the fight.
+-- The bar: both weapon buttons, their flyouts and the drag zone shown while unlocked. It reads the client through
+-- ns.Api and keeps every change of a secure frame out of combat, deferring it to the end of the fight.
 local Bar = {}
 
 local C = ns.Constants
@@ -9,6 +9,8 @@ local Api = ns.Api
 local L = ns.L
 local Inventory = ns.Inventory
 local WeaponState = ns.WeaponState
+local WeaponEnchants = ns.WeaponEnchants
+local Items = ns.Items
 local Flyout = ns.Flyout
 local WeaponButton = ns.WeaponButton
 
@@ -19,18 +21,26 @@ local EMPTY_SLOT_ICON = {
   [C.SLOT_OFF_HAND] = "Interface\\PaperDoll\\UI-PaperDoll-Slot-SecondaryHand",
 }
 
+-- Room around the buttons that the drag zone covers: the hand labels above, the timers below.
+local ZONE_SIDE = 6
+local ZONE_TOP = 18
+local ZONE_BOTTOM = 32
+
+-- The drag zone: a highlighted area over the buttons, shown only while the bar is unlocked. It sits above the buttons,
+-- so while it is shown a click drags the bar instead of opening a list.
 local function createHandle(anchor)
   local handle = CreateFrame("Button", nil, anchor)
-  handle:SetSize(120, 20)
-  handle:SetPoint("TOP", anchor, "BOTTOM", 0, -22)
+  handle:SetPoint("TOPLEFT", anchor, "TOPLEFT", -ZONE_SIDE, ZONE_TOP)
+  handle:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", ZONE_SIDE, -ZONE_BOTTOM)
+  handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + 20)
   handle:EnableMouse(true)
   handle:RegisterForDrag("LeftButton")
 
   local background = handle:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints()
-  background:SetColorTexture(0.1, 0.1, 0.1, 0.85)
+  background:SetColorTexture(1, 0.82, 0, 0.25)
   local label = handle:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  label:SetPoint("CENTER")
+  label:SetPoint("BOTTOM", handle, "TOP", 0, 2)
   label:SetText(L("handle.text"))
 
   handle:SetScript("OnDragStart", function()
@@ -124,15 +134,29 @@ function Bar.OnCombatEnded()
   end
 end
 
--- The icon of a weapon button: the item that made the enchant when known, else the weapon, else the empty slot.
-function Bar.IconFor(slot, state)
-  if state.itemID then
-    local icon = Api.GetItemIcon(state.itemID)
-    if icon then
-      return icon
+-- The icon of a weapon button: the weapon, or the empty slot.
+function Bar.IconFor(slot)
+  return Api.GetEquippedTexture(slot) or EMPTY_SLOT_ICON[slot]
+end
+
+-- item name -> true for every catalog poison whose name the client knows. Rebuilt until every name has loaded.
+function Bar.PoisonNames()
+  if Bar.poisonNames and Bar.poisonNamesComplete then
+    return Bar.poisonNames
+  end
+  local names, complete = {}, true
+  for _, entry in ipairs(Items.LIST) do
+    if entry.kind == "poison" then
+      local name = Api.GetItemName(entry.itemID)
+      if name then
+        names[name] = true
+      else
+        complete = false
+      end
     end
   end
-  return Api.GetEquippedTexture(slot) or EMPTY_SLOT_ICON[slot]
+  Bar.poisonNames, Bar.poisonNamesComplete = names, complete
+  return names
 end
 
 -- Reads the weapon enchants and redraws both buttons.
@@ -140,6 +164,7 @@ function Bar.Tick(now)
   if not Bar.anchor then
     return
   end
+  Bar.units = Bar.units or WeaponEnchants.Units(Api.GetEnchantTimeFormats())
   local enchants = Api.GetWeaponEnchants()
   for _, slot in ipairs(C.SLOTS) do
     local enchant = enchants and enchants[slot]
@@ -148,12 +173,13 @@ function Bar.Tick(now)
     if equipped then
       equipped = true
     end
+    local tooltip = WeaponEnchants.ParseTooltip(Api.GetInventoryTooltipTexts(slot), Bar.units)
     local state = WeaponState.Build(enchant, {
       equipped = equipped,
       warnSeconds = Bar.db.warnMinutes * 60,
-      enchants = Bar.db.enchants,
+      rows = WeaponEnchants.Rows(enchant, tooltip, { enchants = Bar.db.enchants, poisonNames = Bar.PoisonNames() }),
     })
-    WeaponButton.Render(Bar.buttons[slot], state, Bar.IconFor(slot, state))
+    WeaponButton.Render(Bar.buttons[slot], state, Bar.IconFor(slot))
   end
 end
 
@@ -161,12 +187,17 @@ function Bar.OnApply(slot, itemID)
   Bar.learner:NoteApply(slot, itemID, Api.Now())
 end
 
--- Shows or hides the move handle. Returns false in combat or before the bar exists.
+-- Shows or hides the drag zone; unlocking closes the lists. Returns false in combat or before the bar exists.
 function Bar.SetUnlocked(unlocked)
   if not Bar.anchor or Api.InCombat() then
     return false
   end
   Bar.unlocked = unlocked and true or false
+  if Bar.unlocked then
+    for _, slot in ipairs(C.SLOTS) do
+      Bar.flyouts[slot]:Hide()
+    end
+  end
   Bar.handle:SetShown(Bar.unlocked)
   return true
 end

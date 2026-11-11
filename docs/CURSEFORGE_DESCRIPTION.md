@@ -2,7 +2,7 @@
 
 ## Summary
 
-One button per weapon for WoW: Forever: pick a poison, stone or oil from your bags and apply it, in or out of combat.
+One button per weapon for WoW: Forever: apply poisons, stones and oils from your bags and track both timers, in or out of combat.
 
 ## Description
 
@@ -21,21 +21,36 @@ Forever**.
 
 ## On the buttons
 
-- **Time left** under each weapon and **charges** above it.
-- **Red glow** when a weapon has nothing applied or less than 5 minutes left (adjustable with `/ras warn`).
-- The icon shows the item on the weapon once the addon has applied it.
+- **The weapon's icon**, with no tooltip in the way.
+- **Poison and stone timers.** On Forever a weapon can carry a poison and a stone at once: under each button, a small
+  poison icon with the poison's time left and a small stone icon with the stone's.
+- **Poison charges** above the button.
+- **Red glow** when a weapon has nothing applied or less than 5 minutes left on either (adjustable with `/ras warn`).
+
+## Minimap button
+
+- **Click** it for a menu: unlock or lock the bar, reset its position, hide the button.
+- **Drag** it around the minimap.
+- `/ras minimap` shows it again.
+
+## Moving the bar
+
+Unlock it from the minimap menu or with `/ras unlock`: a highlighted area covers the buttons, drag it where you want.
+Lock it again and only the buttons are left.
 
 ## Commands
 
 - `/ras unlock` and `/ras lock`: move the bar.
 - `/ras reset`: default position.
 - `/ras warn <minutes>`: warning threshold.
+- `/ras minimap`: show or hide the minimap button.
 - `/ras debug bags` and `/ras debug weapon`: what the game reports, for bug reports.
 
 ## Beta
 
-Covered by automated tests, not verified on a live Forever client yet. The item ids are Classic Era ids; if something in
-your bags is not offered, please report the output of `/ras debug bags`.
+Covered by automated tests. The poison and weightstone timers were checked against real Forever data; the rest has not
+been verified on a live client yet. If something in your bags is not offered or a timer looks wrong, please report the
+output of `/ras debug bags` and `/ras debug weapon`.
 
 ## Privacy
 

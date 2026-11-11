@@ -16,9 +16,12 @@ Core\Api.lua
 Core\Store.lua
 Data\Items.lua
 Domain\Inventory.lua
+Domain\WeaponEnchants.lua
 Domain\WeaponState.lua
 UI\Flyout.lua
 UI\WeaponButton.lua
 UI\Bar.lua
+Commands\Actions.lua
+UI\MinimapButton.lua
 Commands\Slash.lua
 Core\Init.lua

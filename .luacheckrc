@@ -13,15 +13,18 @@ globals = {
 read_globals = {
   "CreateFrame",
   "GameTooltip",
+  "GetCursorPosition",
   "GetInventoryItemID",
   "GetInventoryItemTexture",
   "GetLocale",
   "GetTime",
   "GetWeaponEnchantInfo",
   "InCombatLockdown",
+  "Minimap",
   "SecureHandlerSetFrameRef",
   "SecureHandlerWrapScript",
   "UIParent",
+  "UISpecialFrames",
   "issecretvalue",
 }
 

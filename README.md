@@ -19,17 +19,22 @@
 
 ## What it does
 
-- **Two weapon buttons**, main hand (MH) and off hand (OH). Each shows what the weapon carries.
+- **Two weapon buttons**, main hand (MH) and off hand (OH), each with the weapon's icon and no tooltip.
 - **Click a weapon** to open the list of what you can put on it: the poisons, sharpening stones, weightstones and
   weapon oils in your bags, strongest first, with how many you have. Sharpening stones are offered only for edged
   weapons and weightstones only for blunt ones.
 - **Click an item** in the list to apply it to that weapon. The list closes.
 - **In combat too.** Opening the list and applying an item work in combat. The game does not let addons change the list
   in combat, so it is rebuilt when the fight ends; meanwhile the counts still update and a spent item is greyed out.
-- **Timer and charges.** Under each button, the time left on the weapon; above it, the charges when the game reports
-  them.
+- **Timers and charges.** On Forever a weapon can carry a poison and a stone at once. Under each button, one line per
+  enchant: a small poison icon with the poison's time left and a small stone icon with the stone's. Above it, the
+  poison's charges. The stone's time comes from the weapon tooltip, in whole minutes (see
+  [docs/API_NOTES.md](docs/API_NOTES.md)).
 - **Warning.** A red glow when a weapon has nothing applied ("Missing") or less than 5 minutes left (`/ras warn`).
-- **Movable.** `/ras unlock` shows a handle to drag the bar; `/ras lock` hides it. The bar always starts locked.
+- **Movable.** `/ras unlock` highlights an area over the buttons to drag the bar; `/ras lock` hides it and only the
+  buttons are left. The bar always starts locked.
+- **Minimap button.** Click it for a menu to unlock or lock the bar, reset its position or hide the button; drag it
+  around the minimap. `/ras minimap` shows it again.
 
 ## Install
 
@@ -48,9 +53,10 @@ saved variable, not in the addon folder. Settings of versions before this redesi
 | Command | What it does |
 |---|---|
 | `/ras` | Lists the commands. |
-| `/ras unlock` | Shows the handle to drag the bar. |
-| `/ras lock` | Hides the handle. |
+| `/ras unlock` | Shows a highlighted area over the bar to drag it. |
+| `/ras lock` | Hides that area; only the buttons are left. |
 | `/ras reset` | Moves the bar back to its default position. |
+| `/ras minimap` | Shows or hides the minimap button. |
 | `/ras warn <minutes>` | The warning lights up below this many minutes left (0 to 60; 0 warns only when nothing is applied). |
 | `/ras debug bags` | Prints the id, count and name of every item in your bags. |
 | `/ras debug weapon` | Prints what the game reports about both weapon enchants. |

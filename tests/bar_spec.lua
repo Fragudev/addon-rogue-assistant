@@ -123,17 +123,66 @@ describe("Bar", function()
     assert.same({ { 2871, "3", "item:2871", false } }, shownRows(16))
   end)
 
-  it("shows time, charges and the applied item once learned", function()
+  it("shows the weapon icon with the time and charges of what is applied", function()
     WowStub.Click(flyout(16).rows[1])
     state.time = 1003
     state.weapon = { true, 1800000, 40, 625, false, 0, 0, 0 }
     WowStub.Update(0.3)
     local button = weapon(16)
-    assert.equal("30m", button.timer:GetText())
+    assert.equal("30m", button.rows[1].text:GetText())
     assert.equal("40", button.charges:GetText())
-    assert.equal("icon-8928", button.icon:GetTexture())
+    assert.equal("weapon-1001", button.icon:GetTexture())
+    assert.is_false(button.icon.desaturated)
     assert.is_false(button.glow:IsShown())
     assert.equal(8928, RogueAssistantDB.enchants[625])
+  end)
+
+  it("shows a poison row and a stone row with their icons and times", function()
+    state.weapon = { true, 1800000, 40, 625, false, 0, 0, 0 }
+    state.names[8928] = "Instant Poison VI"
+    state.tooltips[16] = {
+      { "Bloodfang Dagger" },
+      { "Sharpened (+8 Damage) (25 min)" },
+      { "Instant Poison VI (30 min)" },
+    }
+    WowStub.Update(0.3)
+    local rows = weapon(16).rows
+    assert.equal("Interface\\Icons\\Trade_BrewPoison", rows[1].icon:GetTexture())
+    assert.equal("30m", rows[1].text:GetText())
+    assert.is_true(rows[1].icon:IsShown())
+    assert.equal("Interface\\Icons\\INV_Stone_SharpeningStone_01", rows[2].icon:GetTexture())
+    assert.equal("25m", rows[2].text:GetText())
+    assert.is_true(rows[2].icon:IsShown())
+    assert.equal("40", weapon(16).charges:GetText())
+  end)
+
+  it("shows the poison and the weightstone measured on Forever", function()
+    state.items[1001] = { classID = 2, subclassID = 4 }
+    state.weapon = { true, 1669925, 60, 323, true, 1790515, 60, 323, false }
+    state.tooltips[16] = {
+      { "Rock on Stick" },
+      { "One-Hand", "Mace" },
+      { "Weighted +6 (30 min)" },
+      { "Instant Poison (28 min) (60 Charges)" },
+      { "Durability 81 / 90" },
+    }
+    WowStub.Update(0.3)
+    local rows = weapon(16).rows
+    assert.equal("Interface\\Icons\\Trade_BrewPoison", rows[1].icon:GetTexture())
+    assert.equal("27m", rows[1].text:GetText())
+    assert.equal("Interface\\Icons\\INV_Stone_SharpeningStone_01", rows[2].icon:GetTexture())
+    assert.equal("30m", rows[2].text:GetText())
+    assert.equal("60", weapon(16).charges:GetText())
+  end)
+
+  it("shows a single stone row when only a stone is applied", function()
+    state.weapon = { true, 600000, 0, 1643, false, 0, 0, 0 }
+    WowStub.Update(0.3)
+    local rows = weapon(16).rows
+    assert.equal("Interface\\Icons\\INV_Stone_SharpeningStone_01", rows[1].icon:GetTexture())
+    assert.equal("10m", rows[1].text:GetText())
+    assert.is_false(rows[2].icon:IsShown())
+    assert.equal("", rows[2].text:GetText())
   end)
 
   it("shows the weapon icon while the enchant item is not known", function()
@@ -150,7 +199,8 @@ describe("Bar", function()
     assert.is_false(weapon(16).missing:IsShown())
     assert.is_true(weapon(17).glow:IsShown())
     assert.is_true(weapon(17).missing:IsShown())
-    assert.equal("", weapon(17).timer:GetText())
+    assert.equal("", weapon(17).rows[1].text:GetText())
+    assert.is_false(weapon(17).rows[1].icon:IsShown())
   end)
 
   it("does not warn for an empty off hand and shows the empty slot icon", function()
@@ -163,23 +213,47 @@ describe("Bar", function()
   it("reads the weapons only every tick", function()
     state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
     WowStub.Update(0.1)
-    assert.equal("", weapon(16).timer:GetText())
+    assert.equal("", weapon(16).rows[1].text:GetText())
     WowStub.Update(0.2)
-    assert.equal("30m", weapon(16).timer:GetText())
+    assert.equal("30m", weapon(16).rows[1].text:GetText())
   end)
 
   it("redraws on an inventory change of the player only", function()
     state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
     WowStub.Fire("UNIT_INVENTORY_CHANGED", "target")
-    assert.equal("", weapon(16).timer:GetText())
+    assert.equal("", weapon(16).rows[1].text:GetText())
     WowStub.Fire("UNIT_INVENTORY_CHANGED", "player")
-    assert.equal("30m", weapon(16).timer:GetText())
+    assert.equal("30m", weapon(16).rows[1].text:GetText())
   end)
 
   it("ignores ADDON_LOADED of other addons", function()
     _G.RogueAssistantDB = { version = 2, warnMinutes = 7, enchants = {} }
     WowStub.Fire("ADDON_LOADED", "OtherAddon")
     assert.equal(7, RogueAssistantDB.warnMinutes)
+  end)
+
+  it("shows no tooltip on hover", function()
+    for _, slot in ipairs({ 16, 17 }) do
+      assert.is_nil(weapon(slot).scripts.OnEnter)
+      assert.is_nil(weapon(slot).scripts.OnLeave)
+    end
+  end)
+
+  it("covers the buttons with a drag zone only while unlocked", function()
+    local zone = ns.Bar.handle
+    assert.is_false(zone:IsShown())
+    WowStub.Click(weapon(16))
+    assert.is_true(ns.Bar.SetUnlocked(true))
+    assert.is_true(zone:IsShown())
+    assert.is_false(flyout(16):IsShown())
+    assert.equal("TOPLEFT", zone.points[1][1])
+    assert.equal(ns.Bar.anchor, zone.points[1][2])
+    assert.equal("BOTTOMRIGHT", zone.points[2][1])
+    assert.equal(ns.Bar.anchor, zone.points[2][2])
+    assert.is_true(zone:GetFrameLevel() > weapon(16):GetFrameLevel())
+    assert.is_true(zone:GetFrameLevel() > weapon(17):GetFrameLevel())
+    assert.is_true(ns.Bar.SetUnlocked(false))
+    assert.is_false(zone:IsShown())
   end)
 
   it("moves, saves and resets its position", function()

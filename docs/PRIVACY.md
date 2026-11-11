@@ -17,7 +17,7 @@ This can be checked in the source: the addon never calls `SendAddonMessage`, `C_
 
 | Data | Where it comes from |
 |---|---|
-| The position of the bar and the warning threshold | you |
+| The position of the bar, the warning threshold, and the place and visibility of the minimap button | you |
 | Which weapon enchant id belongs to which item id | learned when you apply an item with the addon |
 
 No character names, GUIDs, chat or other players' data are stored. The item ids are shipped inside the addon; nothing

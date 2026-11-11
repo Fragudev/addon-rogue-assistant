@@ -14,6 +14,7 @@ out of combat. For **World of Warcraft: Forever**.
 - [The item list](#the-item-list)
 - [In combat](#in-combat)
 - [Moving the bar](#moving-the-bar)
+- [The minimap button](#the-minimap-button)
 - [Slash commands](#slash-commands)
 - [When the game hides a value](#when-the-game-hides-a-value)
 - [Reporting a problem](#reporting-a-problem)
@@ -30,16 +31,18 @@ out of combat. For **World of Warcraft: Forever**.
 
 | Part | What it shows |
 |---|---|
-| Icon | The item on the weapon once the addon knows it, otherwise the weapon itself. Grey when nothing is applied. |
+| Icon | The weapon. Grey when nothing is applied. |
 | Above, left | The hand: **MH** (main hand) or **OH** (off hand). |
-| Above, right | The charges left, when the game reports any. |
-| Below | The time left: `1h`, `25m`, `4:05` or `42s`. |
-| Red glow | Nothing is applied (the button reads **Missing**) or less than 5 minutes are left. |
+| Above, right | The poison's charges left, when the game reports any. |
+| Below | One line per enchant: a poison icon with the poison's time left, a stone icon with the stone's (`1h`, `25m`, `4:05` or `42s`). |
+| Red glow | Nothing is applied (the button reads **Missing**) or a line has less than 5 minutes left. |
 
-The addon learns which item made an enchant when you apply it from the list, and remembers it. An item applied any other
-way shows the weapon icon until you apply it once with the addon.
+On Forever a weapon can carry a poison and a stone (or weightstone, or oil) at the same time, so the button can show two
+lines. The game reports only the poison directly; the stone's time is read from the weapon's tooltip, so it moves in
+whole minutes. If a line is missing or wrong, the output of `/ras debug weapon` with both applied helps (see
+[Reporting a problem](#reporting-a-problem)).
 
-An empty off hand shows the empty slot and never warns.
+An empty off hand shows the empty slot and never warns. The buttons have no tooltip.
 
 ## The item list
 
@@ -61,29 +64,42 @@ An empty off hand shows the empty slot and never warns.
 
 ## Moving the bar
 
-1. `/ras unlock`: a handle appears under the bar.
-2. Drag the handle.
-3. `/ras lock`: the handle disappears. The position is saved.
+1. `/ras unlock` (or **Unlock bar** in the minimap menu): a highlighted area appears over the buttons, and any open
+   list closes.
+2. Drag the highlighted area. While it is shown, clicking the buttons does not open their lists.
+3. `/ras lock` (or **Lock bar**): the area disappears and only the buttons are left. The position is saved.
 
 `/ras reset` puts the bar back in its default position. The bar always starts locked.
+
+## The minimap button
+
+A round button with the addon's logo sits on the edge of the minimap.
+
+- **Click** it to open a small menu: **Unlock bar** (or **Lock bar** when it is unlocked), **Reset position** and
+  **Hide minimap button**. Click the button again or press Escape to close the menu.
+- **Drag** it to move it around the minimap. Its place is saved.
+- Hid it by mistake? `/ras minimap` shows it again.
+
+The menu works in combat, but unlocking and resetting the bar are refused until the fight ends.
 
 ## Slash commands
 
 | Command | What it does |
 |---|---|
 | `/ras` or `/ras help` | Lists the commands. |
-| `/ras unlock` / `/ras lock` | Shows or hides the move handle. |
+| `/ras unlock` / `/ras lock` | Shows or hides the drag area over the bar. |
 | `/ras reset` | Default position. |
+| `/ras minimap` | Shows or hides the minimap button. |
 | `/ras warn <minutes>` | The warning threshold, 0 to 60 minutes (default 5). With 0 it warns only when nothing is applied. |
 | `/ras debug bags` | Every item in your bags: id, count, name and, when the addon knows it, its kind. |
-| `/ras debug weapon` | What the game reports about both weapon enchants. |
+| `/ras debug weapon` | What the game reports about both weapon enchants: every raw value and the weapon tooltip lines. |
 
 `/rogueassistant` works as well.
 
 ## When the game hides a value
 
 In arenas, battlegrounds and some encounters the game can hide a weapon's enchant from addons. The button then shows no
-timer and no warning, and its tooltip says the value is hidden. Applying items still works.
+timer and no warning. Applying items still works.
 
 ## Reporting a problem
 

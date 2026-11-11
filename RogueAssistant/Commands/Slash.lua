@@ -8,20 +8,13 @@ local Api = ns.Api
 local L = ns.L
 local Items = ns.Items
 local Bar = ns.Bar
+local Actions = ns.Actions
 
-local HELP = { "help.title", "help.unlock", "help.lock", "help.reset", "help.warn", "help.debug" }
+local HELP = { "help.title", "help.unlock", "help.lock", "help.reset", "help.warn", "help.minimap", "help.debug" }
 
 local function printHelp()
   for _, key in ipairs(HELP) do
     Api.Print(L(key))
-  end
-end
-
-local function setLocked(locked)
-  if Bar.SetUnlocked(not locked) then
-    Api.Print(L(locked and "msg.locked" or "msg.unlocked"))
-  else
-    Api.Print(L("msg.combat"))
   end
 end
 
@@ -50,7 +43,30 @@ local function debugBags()
   end
 end
 
+local function debugTooltips()
+  for _, slot in ipairs(C.SLOTS) do
+    local hand = L("slot." .. slot .. ".long")
+    local lines = Api.GetInventoryTooltip(slot)
+    if not lines then
+      Api.Print(L("debug.tooltip.none", hand))
+    else
+      for _, line in ipairs(lines) do
+        local text = line.hidden and "<secret>" or (line.left or "")
+        if line.right then
+          text = text .. " | " .. line.right
+        end
+        Api.Print(L("debug.tooltip.line", hand, text))
+      end
+    end
+  end
+end
+
 local function debugWeapon()
+  local raw = Api.GetWeaponEnchantRaw()
+  if raw then
+    Api.Print(string.format("GetWeaponEnchantInfo (%d): %s", #raw, table.concat(raw, ", ")))
+  end
+  debugTooltips()
   local enchants = Api.GetWeaponEnchants()
   if not enchants then
     Api.Print(L("debug.weapon.none"))
@@ -78,15 +94,13 @@ function Slash.Handle(input)
   if command == "" or command == "help" then
     printHelp()
   elseif command == "unlock" then
-    setLocked(false)
+    Actions.SetLocked(false)
   elseif command == "lock" then
-    setLocked(true)
+    Actions.SetLocked(true)
   elseif command == "reset" then
-    if Bar.ResetPosition() then
-      Api.Print(L("msg.reset"))
-    else
-      Api.Print(L("msg.combat"))
-    end
+    Actions.ResetPosition()
+  elseif command == "minimap" then
+    Actions.ToggleMinimap()
   elseif command == "warn" then
     setWarning(argument)
   elseif command == "debug" and argument == "bags" then
