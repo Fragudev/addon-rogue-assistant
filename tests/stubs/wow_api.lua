@@ -365,6 +365,8 @@ function WowStub.Reset()
     __index = function(tooltip, key)
       if key == "SetInventoryItem" then
         return function(_, _, slot)
+          tooltip.inventorySlots = tooltip.inventorySlots or {}
+          tooltip.inventorySlots[#tooltip.inventorySlots + 1] = slot
           return state.equipment[slot] ~= nil
         end
       end

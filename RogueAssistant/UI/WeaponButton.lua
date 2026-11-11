@@ -30,10 +30,9 @@ local function showTooltip(button)
   if type(GameTooltip) ~= "table" then
     return
   end
+  -- A short hint only: the weapon's own tooltip is not needed here.
   GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-  if not GameTooltip:SetInventoryItem("player", button.slot) then
-    GameTooltip:SetText(L("slot." .. button.slot .. ".long"))
-  end
+  GameTooltip:SetText(L("slot." .. button.slot .. ".long"))
   if button.state and button.state.status == "unknown" then
     GameTooltip:AddLine(L("button.unknown"), 1, 0.3, 0.3, true)
   end

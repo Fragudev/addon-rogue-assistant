@@ -42,6 +42,8 @@ way shows the weapon icon until you apply it once with the addon.
 
 An empty off hand shows the empty slot and never warns.
 
+Hovering a button shows which hand it is and how to use it, not the weapon's tooltip.
+
 ## The item list
 
 - **Click** a weapon button to open its list; click it again to close it. Opening one list closes the other.

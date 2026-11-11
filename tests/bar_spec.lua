@@ -182,6 +182,23 @@ describe("Bar", function()
     assert.equal(7, RogueAssistantDB.warnMinutes)
   end)
 
+  it("shows a short hint on hover, not the weapon tooltip", function()
+    weapon(16).scripts.OnEnter(weapon(16))
+    assert.is_nil(GameTooltip.inventorySlots)
+    assert.same({ "Main hand", "Click: choose what to apply" }, GameTooltip.lines)
+  end)
+
+  it("says on hover when the client hides the enchant", function()
+    state.weapon = { WowStub.Secret, 0, 0, 0, false, 0, 0, 0 }
+    WowStub.Update(0.3)
+    weapon(16).scripts.OnEnter(weapon(16))
+    assert.same({
+      "Main hand",
+      "The client hides this weapon's enchant right now.",
+      "Click: choose what to apply",
+    }, GameTooltip.lines)
+  end)
+
   it("covers the buttons with a drag zone only while unlocked", function()
     local zone = ns.Bar.handle
     assert.is_false(zone:IsShown())
