@@ -25,19 +25,4 @@ function Loader.Load(files, ns)
   return ns
 end
 
--- Loads every file of the TOC except Commands/Slash.lua and Core/Init.lua unless asked; pass the names to keep.
-function Loader.Full(except)
-  local skip = {}
-  for _, path in ipairs(except or {}) do
-    skip[path] = true
-  end
-  local files = {}
-  for _, path in ipairs(Loader.TocFiles()) do
-    if not skip[path] then
-      files[#files + 1] = path
-    end
-  end
-  return Loader.Load(files)
-end
-
 return Loader
