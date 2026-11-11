@@ -13,3 +13,5 @@ Locales\enUS.lua
 Locales\esES.lua
 Core\Api.lua
 Core\Store.lua
+Data\Items.lua
+Domain\Inventory.lua
