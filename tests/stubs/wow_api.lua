@@ -21,6 +21,7 @@ local state
 local function newState()
   return {
     inCombat = false,
+    cvarUseKeyDown = true,
     time = 1000,
     locale = "enUS",
     weapon = { false, 0, 0, 0, false, 0, 0, 0 },
@@ -265,7 +266,13 @@ function WowStub.Click(frame, button)
   if frame.template:find("SecureHandlerClickTemplate") then
     WowStub.RunSnippet(frame.attributes._onclick, frame, button)
   end
-  if frame.template:find("SecureActionButtonTemplate") then
+  -- SecureActionButton_OnClick: an addon mouse click is never a "secure mouse press", so the action runs on the down
+  -- click when useOnKeyDown (or the ActionButtonUseKeyDown CVar, on by default) says so. WowStub.Click is a release.
+  local useOnKeyDown = frame.attributes.useOnKeyDown
+  if useOnKeyDown == nil then
+    useOnKeyDown = state.cvarUseKeyDown
+  end
+  if frame.template:find("SecureActionButtonTemplate") and not useOnKeyDown then
     state.actions[#state.actions + 1] = {
       type = attribute(frame, "type", button),
       item = attribute(frame, "item", button),

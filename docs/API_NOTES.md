@@ -56,8 +56,11 @@ Forever client): `Blizzard_FrameXML/SecureTemplates.lua` and
   `target-slot=<16|17>`, without a button suffix so any mouse button uses them. The template uses the item and, when
   the item starts a spell that targets an item (`SpellCanTargetItem()`), calls `UseInventoryItem(target-slot)`. No
   macro is used.
-- **Clicks.** `RegisterForClicks("AnyUp")`. A mouse click reaches the template as a secure mouse press, which ignores
-  `ActionButtonUseKeyDown`; registering "AnyDown" as well could fire twice.
+- **Clicks.** `SecureActionButton_OnClick` treats a click as a "secure mouse press" only when `isSecureAction` is set,
+  which addon buttons never get (the template XML says so). Otherwise the action runs on the down click when
+  `useOnKeyDown` is true, and that attribute falls back to the `ActionButtonUseKeyDown` CVar (on by default). So each
+  row sets `useOnKeyDown = false` and registers only `"AnyUp"`: the action fires on the release whatever the CVar says.
+  Registering `"AnyDown"` as well would not work: the down click would hide the flyout before the release arrives.
 - **Opening the list.** Each weapon button is a `SecureHandlerClickTemplate` whose `_onclick` snippet reads the frame
   refs `flyout` and `other` (set with `SecureHandlerSetFrameRef`) and shows or hides them. A snippet can show or hide a
   protected frame in combat; the flyout is a `SecureHandlerBaseTemplate` frame for that reason.
@@ -65,7 +68,8 @@ Forever client): `Blizzard_FrameXML/SecureTemplates.lua` and
   preBody)`. `Wrapped_Click` runs the pre-body with the signature `self,button,down`, `self` being the handle of the
   wrapped row; the pre-body hides `self:GetFrameRef("flyout")` and returns nothing, so the click goes on to the action.
 - **What waits for the end of combat.** Creating the frames, setting attributes and frame refs, showing or hiding rows,
-  resizing and moving. `PLAYER_REGEN_ENABLED` applies whatever was deferred. Counts and icons (font strings and
+  resizing and moving. `PLAYER_REGEN_ENABLED` applies whatever was deferred. A drag of the bar in progress is ended on
+  `PLAYER_REGEN_DISABLED`, which arrives just before the lockdown, because the bar holds secure frames. Counts and icons (font strings and
   textures) change in combat.
 
 To check in game: click a weapon, then an item; the cast bar must start and the weapon must get the item, also in

@@ -35,13 +35,11 @@ local function createHandle(anchor)
 
   handle:SetScript("OnDragStart", function()
     if not Api.InCombat() then
+      Bar.dragging = true
       anchor:StartMoving()
     end
   end)
-  handle:SetScript("OnDragStop", function()
-    anchor:StopMovingOrSizing()
-    Bar.SavePosition()
-  end)
+  handle:SetScript("OnDragStop", Bar.StopDragging)
   handle:Hide()
   return handle
 end
@@ -100,6 +98,21 @@ function Bar.Refresh()
     local weapon = Inventory.DescribeWeapon(Api, slot)
     Flyout.SetItems(Bar.flyouts[slot], Inventory.Applicable(counts, weapon))
   end
+end
+
+-- Ends a drag and saves the position. The anchor holds secure frames, so it is only touched out of combat.
+function Bar.StopDragging()
+  if not Bar.dragging or Api.InCombat() then
+    return
+  end
+  Bar.dragging = false
+  Bar.anchor:StopMovingOrSizing()
+  Bar.SavePosition()
+end
+
+-- PLAYER_REGEN_DISABLED arrives just before the combat lockdown: a drag in progress ends there.
+function Bar.OnCombatStarted()
+  Bar.StopDragging()
 end
 
 function Bar.OnCombatEnded()

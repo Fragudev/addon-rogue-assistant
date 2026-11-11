@@ -43,7 +43,10 @@ local function createRow(flyout, index, onApply)
   local row = CreateFrame("Button", flyout:GetName() .. "Row" .. index, flyout, "SecureActionButtonTemplate")
   row:SetSize(C.ROW_SIZE, C.ROW_SIZE)
   row:SetPoint("BOTTOM", flyout, "BOTTOM", 0, C.FLYOUT_PADDING + (index - 1) * (C.ROW_SIZE + C.ROW_GAP))
+  -- The template runs the action on the down or the up click depending on useOnKeyDown, which falls back to the
+  -- ActionButtonUseKeyDown CVar (on by default). Fixing it to false makes the release fire whatever the CVar says.
   row:RegisterForClicks("AnyUp")
+  row:SetAttribute("useOnKeyDown", false)
   row:SetAttribute("type", "item")
   row:SetAttribute("target-slot", flyout.slot)
 

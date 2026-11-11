@@ -11,6 +11,7 @@ local EVENTS = {
   "ADDON_LOADED",
   "PLAYER_ENTERING_WORLD",
   "PLAYER_REGEN_ENABLED",
+  "PLAYER_REGEN_DISABLED",
   "BAG_UPDATE_DELAYED",
   "PLAYER_EQUIPMENT_CHANGED",
   "UNIT_INVENTORY_CHANGED",
@@ -53,6 +54,8 @@ function Init.OnEvent(_, event, ...)
     else
       Init.Start()
     end
+  elseif event == "PLAYER_REGEN_DISABLED" then
+    Bar.OnCombatStarted()
   elseif event == "UNIT_INVENTORY_CHANGED" then
     if ... == "player" then
       Bar.Refresh()

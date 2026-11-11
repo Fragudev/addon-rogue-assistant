@@ -85,6 +85,29 @@ describe("Bar", function()
     assert.same({}, state.violations)
   end)
 
+  it("applies on the mouse release whatever the key-down setting is", function()
+    for _, keyDown in ipairs({ true, false }) do
+      state.cvarUseKeyDown = keyDown
+      WowStub.Click(flyout(16).rows[1])
+    end
+    assert.same({
+      { type = "item", item = "item:8928", slot = 16 },
+      { type = "item", item = "item:8928", slot = 16 },
+    }, state.actions)
+  end)
+
+  it("stops a drag when combat starts and keeps where the bar was dropped", function()
+    ns.Bar.SetUnlocked(true)
+    ns.Bar.handle.scripts.OnDragStart()
+    ns.Bar.anchor.points = { { "TOP", UIParent, "TOP", 10, -20 } }
+    WowStub.Fire("PLAYER_REGEN_DISABLED")
+    assert.is_false(ns.Bar.anchor.moving)
+    assert.same({ point = "TOP", relativePoint = "TOP", x = 10, y = -20 }, RogueAssistantDB.position)
+    state.inCombat = true
+    ns.Bar.handle.scripts.OnDragStop()
+    assert.same({}, state.violations)
+  end)
+
   it("updates counts in combat and rebuilds the list when the fight ends", function()
     state.inCombat = true
     WowStub.SetBag({ { 2871, 3 } })
