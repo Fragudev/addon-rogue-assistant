@@ -134,6 +134,24 @@ end
 function Frame:GetSize()
   return self.width, self.height
 end
+function Frame:GetWidth()
+  return self.width
+end
+function Frame:GetCenter()
+  if self.center then
+    return self.center[1], self.center[2]
+  end
+  return nil
+end
+function Frame:SetFrameLevel(level)
+  self.level = level
+end
+function Frame:GetFrameLevel()
+  return self.level
+end
+function Frame:GetEffectiveScale()
+  return self.scale or 1
+end
 function Frame:ClearAllPoints()
   if not protectedChange(self, "ClearAllPoints") then
     self.points = {}
@@ -192,6 +210,7 @@ local function newFrame(frameType, name, parent, template)
     regions = {},
     points = {},
     shown = true,
+    level = type(parent) == "table" and (parent.level or 0) + 1 or 0,
   }, {
     __index = function(_, key)
       if Frame[key] then
@@ -329,6 +348,14 @@ function WowStub.Reset()
     return newFrame(frameType, name, parent, template)
   end
   _G.UIParent = newFrame("Frame", "UIParent")
+  _G.Minimap = newFrame("Frame", "Minimap", _G.UIParent)
+  _G.Minimap.width, _G.Minimap.height = 140, 140
+  _G.Minimap.center = { 1000, 700 }
+  _G.UISpecialFrames = {}
+  state.cursor = { 0, 0 }
+  _G.GetCursorPosition = function()
+    return state.cursor[1], state.cursor[2]
+  end
   _G.DEFAULT_CHAT_FRAME = {
     AddMessage = function(_, message)
       state.messages[#state.messages + 1] = message

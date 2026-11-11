@@ -8,20 +8,13 @@ local Api = ns.Api
 local L = ns.L
 local Items = ns.Items
 local Bar = ns.Bar
+local Actions = ns.Actions
 
-local HELP = { "help.title", "help.unlock", "help.lock", "help.reset", "help.warn", "help.debug" }
+local HELP = { "help.title", "help.unlock", "help.lock", "help.reset", "help.warn", "help.minimap", "help.debug" }
 
 local function printHelp()
   for _, key in ipairs(HELP) do
     Api.Print(L(key))
-  end
-end
-
-local function setLocked(locked)
-  if Bar.SetUnlocked(not locked) then
-    Api.Print(L(locked and "msg.locked" or "msg.unlocked"))
-  else
-    Api.Print(L("msg.combat"))
   end
 end
 
@@ -78,15 +71,13 @@ function Slash.Handle(input)
   if command == "" or command == "help" then
     printHelp()
   elseif command == "unlock" then
-    setLocked(false)
+    Actions.SetLocked(false)
   elseif command == "lock" then
-    setLocked(true)
+    Actions.SetLocked(true)
   elseif command == "reset" then
-    if Bar.ResetPosition() then
-      Api.Print(L("msg.reset"))
-    else
-      Api.Print(L("msg.combat"))
-    end
+    Actions.ResetPosition()
+  elseif command == "minimap" then
+    Actions.ToggleMinimap()
   elseif command == "warn" then
     setWarning(argument)
   elseif command == "debug" and argument == "bags" then

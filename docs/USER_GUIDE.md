@@ -14,6 +14,7 @@ out of combat. For **World of Warcraft: Forever**.
 - [The item list](#the-item-list)
 - [In combat](#in-combat)
 - [Moving the bar](#moving-the-bar)
+- [The minimap button](#the-minimap-button)
 - [Slash commands](#slash-commands)
 - [When the game hides a value](#when-the-game-hides-a-value)
 - [Reporting a problem](#reporting-a-problem)
@@ -61,19 +62,32 @@ An empty off hand shows the empty slot and never warns.
 
 ## Moving the bar
 
-1. `/ras unlock`: a handle appears under the bar.
-2. Drag the handle.
-3. `/ras lock`: the handle disappears. The position is saved.
+1. `/ras unlock` (or **Unlock bar** in the minimap menu): a highlighted area appears over the buttons, and any open
+   list closes.
+2. Drag the highlighted area. While it is shown, clicking the buttons does not open their lists.
+3. `/ras lock` (or **Lock bar**): the area disappears and only the buttons are left. The position is saved.
 
 `/ras reset` puts the bar back in its default position. The bar always starts locked.
+
+## The minimap button
+
+A round button with the addon's logo sits on the edge of the minimap.
+
+- **Click** it to open a small menu: **Unlock bar** (or **Lock bar** when it is unlocked), **Reset position** and
+  **Hide minimap button**. Click the button again or press Escape to close the menu.
+- **Drag** it to move it around the minimap. Its place is saved.
+- Hid it by mistake? `/ras minimap` shows it again.
+
+The menu works in combat, but unlocking and resetting the bar are refused until the fight ends.
 
 ## Slash commands
 
 | Command | What it does |
 |---|---|
 | `/ras` or `/ras help` | Lists the commands. |
-| `/ras unlock` / `/ras lock` | Shows or hides the move handle. |
+| `/ras unlock` / `/ras lock` | Shows or hides the drag area over the bar. |
 | `/ras reset` | Default position. |
+| `/ras minimap` | Shows or hides the minimap button. |
 | `/ras warn <minutes>` | The warning threshold, 0 to 60 minutes (default 5). With 0 it warns only when nothing is applied. |
 | `/ras debug bags` | Every item in your bags: id, count, name and, when the addon knows it, its kind. |
 | `/ras debug weapon` | What the game reports about both weapon enchants. |

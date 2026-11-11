@@ -1,7 +1,7 @@
 local _, ns = ...
 
--- The bar: both weapon buttons, their flyouts and the move handle. It reads the client through ns.Api and keeps every
--- change of a secure frame out of combat, deferring it to the end of the fight.
+-- The bar: both weapon buttons, their flyouts and the drag zone shown while unlocked. It reads the client through
+-- ns.Api and keeps every change of a secure frame out of combat, deferring it to the end of the fight.
 local Bar = {}
 
 local C = ns.Constants
@@ -19,18 +19,26 @@ local EMPTY_SLOT_ICON = {
   [C.SLOT_OFF_HAND] = "Interface\\PaperDoll\\UI-PaperDoll-Slot-SecondaryHand",
 }
 
+-- Room around the buttons that the drag zone covers: the hand labels above, the timers below.
+local ZONE_SIDE = 6
+local ZONE_TOP = 18
+local ZONE_BOTTOM = 18
+
+-- The drag zone: a highlighted area over the buttons, shown only while the bar is unlocked. It sits above the buttons,
+-- so while it is shown a click drags the bar instead of opening a list.
 local function createHandle(anchor)
   local handle = CreateFrame("Button", nil, anchor)
-  handle:SetSize(120, 20)
-  handle:SetPoint("TOP", anchor, "BOTTOM", 0, -22)
+  handle:SetPoint("TOPLEFT", anchor, "TOPLEFT", -ZONE_SIDE, ZONE_TOP)
+  handle:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", ZONE_SIDE, -ZONE_BOTTOM)
+  handle:SetFrameLevel((anchor:GetFrameLevel() or 0) + 20)
   handle:EnableMouse(true)
   handle:RegisterForDrag("LeftButton")
 
   local background = handle:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints()
-  background:SetColorTexture(0.1, 0.1, 0.1, 0.85)
+  background:SetColorTexture(1, 0.82, 0, 0.25)
   local label = handle:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  label:SetPoint("CENTER")
+  label:SetPoint("BOTTOM", handle, "TOP", 0, 2)
   label:SetText(L("handle.text"))
 
   handle:SetScript("OnDragStart", function()
@@ -161,12 +169,17 @@ function Bar.OnApply(slot, itemID)
   Bar.learner:NoteApply(slot, itemID, Api.Now())
 end
 
--- Shows or hides the move handle. Returns false in combat or before the bar exists.
+-- Shows or hides the drag zone; unlocking closes the lists. Returns false in combat or before the bar exists.
 function Bar.SetUnlocked(unlocked)
   if not Bar.anchor or Api.InCombat() then
     return false
   end
   Bar.unlocked = unlocked and true or false
+  if Bar.unlocked then
+    for _, slot in ipairs(C.SLOTS) do
+      Bar.flyouts[slot]:Hide()
+    end
+  end
   Bar.handle:SetShown(Bar.unlocked)
   return true
 end

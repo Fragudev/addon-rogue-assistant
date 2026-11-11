@@ -30,6 +30,8 @@ Forever**.
 - `/ras unlock` and `/ras lock`: move the bar.
 - `/ras reset`: default position.
 - `/ras warn <minutes>`: warning threshold.
+- `/ras minimap`: show or hide the minimap button. Click the minimap button for a menu to lock, unlock or reset the
+  bar.
 - `/ras debug bags` and `/ras debug weapon`: what the game reports, for bug reports.
 
 ## Beta

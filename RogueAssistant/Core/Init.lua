@@ -35,6 +35,7 @@ function Init.Start()
     return
   end
   Bar.Create(ns.db)
+  ns.MinimapButton.Create()
   frame:SetScript("OnUpdate", Init.OnUpdate)
 end
 

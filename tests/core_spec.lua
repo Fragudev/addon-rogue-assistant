@@ -52,7 +52,7 @@ describe("Core", function()
   describe("Store", function()
     it("starts fresh from nothing or from another version", function()
       local fresh = ns.Store.Load(nil)
-      assert.same({ version = 2, warnMinutes = 5, enchants = {} }, fresh)
+      assert.same({ version = 2, warnMinutes = 5, enchants = {}, minimapAngle = 225, minimapHidden = false }, fresh)
       assert.same(fresh, ns.Store.Load({ profile = { poison = {} } }))
     end)
 
@@ -62,8 +62,16 @@ describe("Core", function()
         warnMinutes = 999,
         position = { point = "TOP" },
         enchants = { [625] = 8928 },
+        minimapAngle = "north",
+        minimapHidden = "yes",
       })
-      assert.same({ version = 2, warnMinutes = 5, enchants = { [625] = 8928 } }, saved)
+      assert.same({
+        version = 2,
+        warnMinutes = 5,
+        enchants = { [625] = 8928 },
+        minimapAngle = 225,
+        minimapHidden = false,
+      }, saved)
       local position = { point = "TOP", relativePoint = "TOP", x = 1, y = -2 }
       assert.same(
         position,

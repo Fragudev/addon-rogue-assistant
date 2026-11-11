@@ -29,7 +29,10 @@
 - **Timer and charges.** Under each button, the time left on the weapon; above it, the charges when the game reports
   them.
 - **Warning.** A red glow when a weapon has nothing applied ("Missing") or less than 5 minutes left (`/ras warn`).
-- **Movable.** `/ras unlock` shows a handle to drag the bar; `/ras lock` hides it. The bar always starts locked.
+- **Movable.** `/ras unlock` highlights an area over the buttons to drag the bar; `/ras lock` hides it and only the
+  buttons are left. The bar always starts locked.
+- **Minimap button.** Click it for a menu to unlock or lock the bar, reset its position or hide the button; drag it
+  around the minimap. `/ras minimap` shows it again.
 
 ## Install
 
@@ -48,9 +51,10 @@ saved variable, not in the addon folder. Settings of versions before this redesi
 | Command | What it does |
 |---|---|
 | `/ras` | Lists the commands. |
-| `/ras unlock` | Shows the handle to drag the bar. |
-| `/ras lock` | Hides the handle. |
+| `/ras unlock` | Shows a highlighted area over the bar to drag it. |
+| `/ras lock` | Hides that area; only the buttons are left. |
 | `/ras reset` | Moves the bar back to its default position. |
+| `/ras minimap` | Shows or hides the minimap button. |
 | `/ras warn <minutes>` | The warning lights up below this many minutes left (0 to 60; 0 warns only when nothing is applied). |
 | `/ras debug bags` | Prints the id, count and name of every item in your bags. |
 | `/ras debug weapon` | Prints what the game reports about both weapon enchants. |

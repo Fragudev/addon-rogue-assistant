@@ -4,6 +4,8 @@ local _, ns = ...
 --   warnMinutes  number   the warning lights up below this many minutes left (0 = only when nothing is applied)
 --   position     table?   { point, relativePoint, x, y } of the bar; nil = default position
 --   enchants     table    enchant id -> item id, learned when the addon applies an item
+--   minimapAngle number   degrees of the minimap button around the minimap (0 = east, 90 = north)
+--   minimapHidden boolean the minimap button is hidden (/ras minimap shows it again)
 local Store = {}
 
 local C = ns.Constants
@@ -30,6 +32,13 @@ function Store.Load(saved)
   end
   if type(saved.enchants) ~= "table" then
     saved.enchants = {}
+  end
+  local angle = saved.minimapAngle
+  if type(angle) ~= "number" or not (angle >= 0 and angle < 360) then
+    saved.minimapAngle = C.DEFAULT_MINIMAP_ANGLE
+  end
+  if type(saved.minimapHidden) ~= "boolean" then
+    saved.minimapHidden = false
   end
   return saved
 end
