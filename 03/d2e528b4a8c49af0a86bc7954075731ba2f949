@@ -1,0 +1,25 @@
+docs/USER_GUIDE.md
+  s_8e661c4730a852::t_ac8eaea3405bee 45-46
+tests/bar_spec.lua
+  s_8e661c4730a852::t_5420db0bfc4f0a 185-201
+tests/stubs/wow_api.lua
+  s_8e661c4730a852::t_229f15be0c91a3 368-369
+RogueAssistant/UI/WeaponButton.lua
+  s_8e661c4730a852::t_6ca47f20c8731a 33,35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "03d2e528b4a8c49af0a86bc7954075731ba2f949",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
