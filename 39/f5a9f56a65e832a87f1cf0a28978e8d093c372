@@ -1,0 +1,27 @@
+RogueAssistant/Data/Items.lua
+  s_8e661c4730a852::t_7e1c23d1a35a66 1-115
+RogueAssistant/Domain/Inventory.lua
+  s_8e661c4730a852::t_ff2d43209031c3 1-47
+RogueAssistant/RogueAssistant.toc
+  s_8e661c4730a852::t_693a8da2dba497 16-17
+tests/inventory_spec.lua
+  s_8e661c4730a852::t_c584a60e2ce54d 1-46
+tests/items_spec.lua
+  s_8e661c4730a852::t_24466ab8788bfd 1-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "39f5a9f56a65e832a87f1cf0a28978e8d093c372",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
