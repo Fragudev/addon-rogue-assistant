@@ -1,161 +1,106 @@
 local _, ns = ...
 
--- /ras and /rogueassistant. Later phases add their own with Slash.Register (/ras <name>) and Slash.RegisterDebug
--- (/ras debug <name>); a handler receives the rest of the line after the name.
-local Slash = { commands = {}, debugCommands = {} }
+-- /ras and /rogueassistant.
+local Slash = {}
 
-local PREFIX = "|cfffff569Rogue Assistant|r"
+local C = ns.Constants
+local Api = ns.Api
+local L = ns.L
+local Items = ns.Items
+local Bar = ns.Bar
 
-local function say(text)
-  print(PREFIX .. " " .. text)
-end
-
-local function printLines(lines)
-  for _, line in ipairs(lines) do
-    print(line)
-  end
-end
-
-local function register(list, name, handler, helpKey)
-  for _, entry in ipairs(list) do
-    if entry.name == name then
-      entry.handler, entry.helpKey = handler, helpKey
-      return
-    end
-  end
-  list[#list + 1] = { name = name, handler = handler, helpKey = helpKey }
-end
-
-local function find(list, name)
-  for _, entry in ipairs(list) do
-    if entry.name == name then
-      return entry
-    end
-  end
-  return nil
-end
-
--- Adds or replaces /ras <name>. `helpKey` is the locale key of its help line.
-function Slash.Register(name, handler, helpKey)
-  register(Slash.commands, name, handler, helpKey)
-end
-
--- Adds or replaces /ras debug <name>.
-function Slash.RegisterDebug(name, handler, helpKey)
-  register(Slash.debugCommands, name, handler, helpKey)
-end
-
-local function splitFirst(text)
-  local word, rest = (text or ""):match("^%s*(%S*)%s*(.-)%s*$")
-  return word:lower(), rest
-end
+local HELP = { "help.title", "help.unlock", "help.lock", "help.reset", "help.warn", "help.debug" }
 
 local function printHelp()
-  local L = ns.L
-  say(L["cmd.help.header"])
-  print("  " .. L["cmd.help.root"])
-  print("  " .. L["cmd.help.help"])
-  for _, entry in ipairs(Slash.commands) do
-    print("  " .. L[entry.helpKey])
+  for _, key in ipairs(HELP) do
+    Api.Print(L(key))
   end
 end
 
-local function printDebugHelp()
-  local L = ns.L
-  say(L["cmd.debug.header"])
-  for _, entry in ipairs(Slash.debugCommands) do
-    print("  " .. L[entry.helpKey])
+local function setLocked(locked)
+  if Bar.SetUnlocked(not locked) then
+    Api.Print(L(locked and "msg.locked" or "msg.unlocked"))
+  else
+    Api.Print(L("msg.combat"))
   end
 end
 
-local function runEntry(entry, rest)
-  local ok, err = pcall(entry.handler, rest)
-  if not ok then
-    say(ns.L["cmd.error"]:format(entry.name, tostring(err)))
-  end
-end
-
--- Handles one line typed after /ras.
-function Slash.Dispatch(message)
-  local name, rest = splitFirst(message)
-  if name == "help" then
-    printHelp()
+local function setWarning(argument)
+  local minutes = tonumber(argument)
+  if not minutes or minutes ~= math.floor(minutes) or minutes < 0 or minutes > C.MAX_WARN_MINUTES or not ns.db then
+    Api.Print(L("msg.warn.usage", C.MAX_WARN_MINUTES))
     return
   end
-  if name == "" then
-    if ns.disabled or not ns.options then
-      say(ns.L["layout.unavailable"])
-    else
-      ns.options:Open()
-    end
+  ns.db.warnMinutes = minutes
+  Api.Print(L("msg.warn", minutes))
+  Bar.Tick(Api.Now())
+end
+
+local function debugBags()
+  local found = false
+  Api.Print(L("debug.bags.header"))
+  Api.ForEachBagItem(function(itemID, count)
+    found = true
+    local entry = Items.BY_ID[itemID]
+    local kind = entry and L("kind." .. entry.kind) or "-"
+    Api.Print(string.format("%d x %d, %s, %s", itemID, count, Api.GetItemName(itemID) or "?", kind))
+  end)
+  if not found then
+    Api.Print(L("debug.bags.none"))
+  end
+end
+
+local function debugWeapon()
+  local enchants = Api.GetWeaponEnchants()
+  if not enchants then
+    Api.Print(L("debug.weapon.none"))
     return
   end
-  local entry = find(Slash.commands, name)
-  if entry then
-    runEntry(entry, rest)
+  for _, slot in ipairs(C.SLOTS) do
+    local enchant = enchants[slot]
+    local itemID = enchant.enchantID and ns.db and ns.db.enchants[enchant.enchantID]
+    Api.Print(
+      L(
+        "debug.weapon.line",
+        L("slot." .. slot .. ".long"),
+        enchant.unknown and "secret" or tostring(enchant.active),
+        tostring(enchant.ms),
+        tostring(enchant.charges),
+        tostring(enchant.enchantID),
+        tostring(itemID)
+      )
+    )
+  end
+end
+
+function Slash.Handle(input)
+  local command, argument = string.match(string.lower(input or ""), "^%s*(%S*)%s*(.-)%s*$")
+  if command == "" or command == "help" then
+    printHelp()
+  elseif command == "unlock" then
+    setLocked(false)
+  elseif command == "lock" then
+    setLocked(true)
+  elseif command == "reset" then
+    if Bar.ResetPosition() then
+      Api.Print(L("msg.reset"))
+    else
+      Api.Print(L("msg.combat"))
+    end
+  elseif command == "warn" then
+    setWarning(argument)
+  elseif command == "debug" and argument == "bags" then
+    debugBags()
+  elseif command == "debug" and argument == "weapon" then
+    debugWeapon()
   else
-    say(ns.L["cmd.unknown"]:format(name))
+    Api.Print(L("msg.unknown", command))
     printHelp()
   end
 end
 
--- /ras unlock and /ras lock publish a layout event; every movable frame (the poison button, later the tracker)
--- listens to it. A protected frame cannot be configured in combat, so nothing is published then.
-local function layoutCommand(event, doneKey)
-  return function()
-    local L = ns.L
-    if ns.disabled or not ns.bus then
-      say(L["layout.unavailable"])
-    elseif ns.Platform.InCombatLockdown() == true then
-      say(L["layout.combat"])
-    else
-      ns.bus:Publish(event)
-      say(L[doneKey])
-    end
-  end
-end
-
-Slash.Register("unlock", layoutCommand("layout.unlock", "layout.unlocked"), "cmd.help.unlock")
-Slash.Register("lock", layoutCommand("layout.lock", "layout.locked"), "cmd.help.lock")
-
-Slash.Register("debug", function(rest)
-  local name, args = splitFirst(rest)
-  local entry = find(Slash.debugCommands, name)
-  if entry then
-    runEntry(entry, args)
-  else
-    printDebugHelp()
-  end
-end, "cmd.help.debug")
-
-Slash.RegisterDebug("probe", function()
-  local lines = ns.Probe.Run()
-  printLines(lines)
-  if ns.store then
-    ns.store:SetLastProbe(lines)
-    say(ns.L["debug.probe.saved"]:format(#lines))
-  end
-end, "cmd.debug.probe")
-
-Slash.RegisterDebug("bags", function()
-  printLines(ns.Probe.BagLines())
-end, "cmd.debug.bags")
-
-Slash.RegisterDebug("spells", function()
-  printLines(ns.Probe.SpellLines())
-end, "cmd.debug.spells")
-
-Slash.RegisterDebug("auras", function()
-  printLines(ns.Probe.AuraLines())
-end, "cmd.debug.auras")
-
-Slash.RegisterDebug("selftest", function()
-  printLines(ns.Probe.SelfTest())
-end, "cmd.debug.selftest")
-
-for index, command in ipairs(ns.Constants.SLASH_COMMANDS) do
-  _G["SLASH_RAS" .. index] = command
-end
-SlashCmdList["RAS"] = Slash.Dispatch
+SLASH_RAS1 = "/ras"
+SLASH_RAS2 = "/rogueassistant"
+SlashCmdList.RAS = Slash.Handle
 
 ns.Slash = Slash

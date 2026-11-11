@@ -1,120 +1,101 @@
 local _, ns = ...
 
--- What each weapon carries. GetWeaponEnchantInfo gives an enchant id, not an item: the addon learns which poison item
--- makes which enchant id by watching its own applications, and keeps the pairs in the profile.
---
---   Read() -> nil when the client cannot say (unknown), otherwise { mh = slot, oh = slot } with
---     slot = { has, weapon, minutes, charges, enchantId, itemID }
---       has        true / false, nil when unknown
---       weapon     true when a weapon is equipped, false when the slot is empty, nil when unknown
---       minutes    time left in minutes (number, may be fractional), nil when unknown
---       charges    charges left, nil when the enchant has none or it is unknown
---       enchantId  the enchant id on the weapon, nil when none
---       itemID     the poison item that makes the enchant, only when the pair has been learned
+-- Turns what the client reports about a weapon into what its button shows, and learns which item made an enchant.
 local WeaponState = {}
-WeaponState.__index = WeaponState
 
-local SLOT_NUMBER = { mh = 16, oh = 17 }
+local C = ns.Constants
 
--- `deps.data` is the persisted table ({ enchants = { [enchantId] = itemID } } is created in it), `deps.platform` and
--- `deps.now` default to ns.Platform and its clock.
-function WeaponState.New(deps)
-  deps = deps or {}
-  local data = deps.data or {}
-  if type(data.enchants) ~= "table" then
-    data.enchants = {}
+-- Display state of one weapon slot.
+--   enchant   entry of Api.GetWeaponEnchants (nil when the client gave nothing)
+--   options   { equipped = true|false|nil, warnSeconds = number, enchants = enchantID -> itemID }
+-- Returns { status, seconds, charges, itemID, warning } where status is "empty", "unknown", "missing" or "active".
+function WeaponState.Build(enchant, options)
+  if options.equipped == false then
+    return { status = "empty", warning = false }
   end
-  local platform = deps.platform or ns.Platform
-  return setmetatable({
-    data = data,
-    platform = platform,
-    now = deps.now or function()
-      return platform.GetTime() or 0
-    end,
-    pending = {},
-  }, WeaponState)
+  if enchant == nil or enchant.unknown then
+    return { status = "unknown", warning = false }
+  end
+  if not enchant.active then
+    return { status = "missing", warning = true }
+  end
+  local seconds
+  if enchant.ms then
+    seconds = math.floor(enchant.ms / 1000)
+  end
+  local charges
+  if enchant.charges and enchant.charges > 0 then
+    charges = enchant.charges
+  end
+  local itemID
+  if enchant.enchantID then
+    itemID = options.enchants[enchant.enchantID]
+  end
+  return {
+    status = "active",
+    seconds = seconds,
+    charges = charges,
+    itemID = itemID,
+    warning = seconds ~= nil and seconds < options.warnSeconds,
+  }
 end
 
-local function slotFrom(info, prefix)
-  local has = info["has" .. prefix]
-  local slot = { has = has }
-  if has then
-    local ms = info[prefix:lower() .. "Ms"]
-    slot.minutes = ms and ms / 60000 or nil
-    slot.charges = info[prefix:lower() .. "Charges"]
-    if slot.charges == 0 then
-      slot.charges = nil
-    end
-    slot.enchantId = info[prefix:lower() .. "EnchantId"]
+-- "1h", "25m", "4:05" or "42s".
+function WeaponState.FormatTime(seconds)
+  if seconds == nil then
+    return ""
   end
-  return slot
+  if seconds < 0 then
+    seconds = 0
+  end
+  if seconds >= 3600 then
+    return string.format("%dh", math.floor(seconds / 3600))
+  end
+  if seconds >= 600 then
+    return string.format("%dm", math.floor(seconds / 60))
+  end
+  if seconds >= 60 then
+    return string.format("%d:%02d", math.floor(seconds / 60), seconds % 60)
+  end
+  return string.format("%ds", seconds)
 end
 
-function WeaponState:ItemFor(enchantId)
-  return enchantId and self.data.enchants[enchantId] or nil
+-- Learning "enchant id -> item id". The client reports an enchant id, not the item that made it, so the addon
+-- remembers the item the player clicked in a flyout and waits for that weapon's enchant to start or be renewed.
+local Learner = {}
+Learner.__index = Learner
+
+function WeaponState.NewLearner(enchants)
+  return setmetatable({ enchants = enchants, pending = {}, last = {} }, Learner)
 end
 
--- Learns from the applications waiting for their enchant to appear.
-function WeaponState:Settle(slots)
-  local now = self.now()
-  for name, pending in pairs(self.pending) do
-    local slot = slots[name]
-    if now - pending.at > ns.Constants.POISON_PENDING_SECONDS then
-      self.pending[name] = nil
-    elseif slot.enchantId and slot.enchantId ~= pending.previous then
-      self.data.enchants[slot.enchantId] = pending.itemID
-      self.pending[name] = nil
-    end
-  end
+function Learner:NoteApply(slot, itemID, now)
+  self.pending[slot] = { itemID = itemID, at = now }
 end
 
-function WeaponState:Snapshot()
-  local info = self.platform.GetWeaponEnchantInfo()
-  if not info then
-    return nil
-  end
-  local slots = { mh = slotFrom(info, "MH"), oh = slotFrom(info, "OH") }
-  for name, number in pairs(SLOT_NUMBER) do
-    slots[name].weapon = self.platform.GetInventoryItemID("player", number)
-    if slots[name].weapon ~= nil then
-      slots[name].weapon = slots[name].weapon ~= false
-    end
-  end
-  return slots
-end
-
-function WeaponState:Read()
-  local slots = self:Snapshot()
-  if not slots then
-    return nil
-  end
-  self:Settle(slots)
-  for _, slot in pairs(slots) do
-    slot.itemID = self:ItemFor(slot.enchantId)
-  end
-  return slots
-end
-
--- Tells the state the addon just used poison `itemID` on `name` ("mh" or "oh"). When the enchant on that weapon
--- changes within POISON_PENDING_SECONDS, the new enchant id is stored as made by that item. Returns false when the
--- slot name is unknown.
-function WeaponState:NoteApplied(name, itemID)
-  if not SLOT_NUMBER[name] then
+-- Feeds the current enchant of `slot`; returns true when a new mapping was learned.
+function Learner:Observe(slot, enchant, now)
+  local previous = self.last[slot]
+  self.last[slot] = enchant
+  local pending = self.pending[slot]
+  if not pending then
     return false
   end
-  local slots = self:Snapshot()
-  local previous = slots and slots[name].enchantId or nil
-  self.pending[name] = { itemID = itemID, previous = previous, at = self.now() }
-  return true
+  if now - pending.at > C.LEARN_WINDOW_SECONDS then
+    self.pending[slot] = nil
+    return false
+  end
+  if not (enchant and enchant.active and enchant.enchantID) then
+    return false
+  end
+  local started = not (previous and previous.active) or previous.enchantID ~= enchant.enchantID
+  local renewed = previous and previous.ms and enchant.ms and enchant.ms > previous.ms + 1000
+  if started or renewed then
+    self.enchants[enchant.enchantID] = pending.itemID
+    self.pending[slot] = nil
+    return true
+  end
+  return false
 end
 
-WeaponState.SLOT_NUMBER = SLOT_NUMBER
-
 ns.WeaponState = WeaponState
-
-ns.Startup.Register(function()
-  if type(ns.profile.poison) ~= "table" then
-    ns.profile.poison = {}
-  end
-  ns.weaponState = WeaponState.New({ data = ns.profile.poison })
-end)

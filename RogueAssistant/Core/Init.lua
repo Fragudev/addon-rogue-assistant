@@ -1,72 +1,75 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
-ns.name = ADDON_NAME
+-- Entry point: loads the saved variables, builds the bar out of combat and routes client events.
+local Init = {}
 
-local PREFIX = "|cfffff569Rogue Assistant|r"
+local C = ns.Constants
+local Api = ns.Api
+local Bar = ns.Bar
 
-local function say(message)
-  print(PREFIX .. " " .. message)
-end
-
-local function now()
-  return ns.Platform.GetTime() or 0
-end
-
--- Opens the saved variable. A db written by a newer addon is left untouched and the addon stays disabled.
-local function initDatabase()
-  local store, reason = ns.Store.Open(RogueAssistantDB, { now = now })
-  if not store then
-    ns.disabled = reason
-    local schema = type(RogueAssistantDB) == "table" and RogueAssistantDB.schemaVersion or 0
-    say(ns.L["app.schema_newer"]:format(schema))
-    return
-  end
-  RogueAssistantDB = store:Db()
-  ns.store = store
-  ns.bus = ns.EventBus.New()
-end
-
--- Turns the addon off on any class but the rogue: one line in the debug log, nothing printed.
-local function startForPlayer()
-  if ns.disabled or not ns.store then
-    return
-  end
-  local token = ns.Platform.GetPlayerClassToken()
-  if token ~= ns.Constants.CLASS_TOKEN then
-    ns.disabled = "not_rogue"
-    ns.store:Log("disabled: class token " .. tostring(token))
-    return
-  end
-  local guid = ns.Platform.GetPlayerGUID()
-  local profile = ns.store:Profile(guid, { class = token })
-  if not profile then
-    ns.disabled = "no_guid"
-    ns.store:Log("disabled: player GUID unavailable")
-    return
-  end
-  ns.guid = guid
-  ns.profile = profile
-  ns.settings = ns.Settings.New(profile.settings)
-  ns.Startup.Run()
-  ns.bus:Publish("addon.ready")
-end
+local EVENTS = {
+  "ADDON_LOADED",
+  "PLAYER_ENTERING_WORLD",
+  "PLAYER_REGEN_ENABLED",
+  "PLAYER_REGEN_DISABLED",
+  "BAG_UPDATE_DELAYED",
+  "PLAYER_EQUIPMENT_CHANGED",
+  "UNIT_INVENTORY_CHANGED",
+  "GET_ITEM_INFO_RECEIVED",
+}
 
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(_, event, loadedAddon)
-  if event == "ADDON_LOADED" then
-    if loadedAddon == ADDON_NAME then
-      initDatabase()
-    end
-  elseif event == "PLAYER_LOGIN" then
-    -- A failing startup (bad saved data, a broken module) must not raise into the client: log it and stay off.
-    local ok, err = pcall(startForPlayer)
-    if not ok then
-      ns.disabled = ns.disabled or "startup_error"
-      if ns.store then
-        pcall(ns.store.Log, ns.store, "startup failed: " .. tostring(err))
-      end
-    end
+local elapsedSinceTick = 0
+
+function Init.OnUpdate(_, elapsed)
+  elapsedSinceTick = elapsedSinceTick + elapsed
+  if elapsedSinceTick >= C.TICK_SECONDS then
+    elapsedSinceTick = 0
+    Bar.Tick(Api.Now())
   end
-end)
+end
+
+-- Builds the bar unless the player is in combat (then PLAYER_REGEN_ENABLED tries again).
+function Init.Start()
+  if Bar.anchor or Api.InCombat() then
+    return
+  end
+  Bar.Create(ns.db)
+  frame:SetScript("OnUpdate", Init.OnUpdate)
+end
+
+function Init.OnEvent(_, event, ...)
+  if event == "ADDON_LOADED" then
+    if ... ~= C.ADDON then
+      return
+    end
+    RogueAssistantDB = ns.Store.Load(RogueAssistantDB)
+    ns.db = RogueAssistantDB
+    ns.Locale.Use(Api.GetLocale())
+    Init.Start()
+    Api.Print(ns.L("msg.loaded"))
+  elseif event == "PLAYER_REGEN_ENABLED" then
+    if Bar.anchor then
+      Bar.OnCombatEnded()
+    else
+      Init.Start()
+    end
+  elseif event == "PLAYER_REGEN_DISABLED" then
+    Bar.OnCombatStarted()
+  elseif event == "UNIT_INVENTORY_CHANGED" then
+    if ... == "player" then
+      Bar.Refresh()
+      Bar.Tick(Api.Now())
+    end
+  else
+    Bar.Refresh()
+  end
+end
+
+for _, event in ipairs(EVENTS) do
+  pcall(frame.RegisterEvent, frame, event)
+end
+frame:SetScript("OnEvent", Init.OnEvent)
+
+Init.frame = frame
+ns.Init = Init

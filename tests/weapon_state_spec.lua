@@ -1,148 +1,112 @@
-local Loader = dofile("tests/support/loader.lua")
+local Loader = require("tests.support.loader")
 
 describe("WeaponState", function()
-  local ns, state, data, now
-
-  -- hasMH, mhMs, mhCharges, mhEnchantId, hasOH, ohMs, ohCharges, ohEnchantId
-  local function weapons(...)
-    WowStub.state.weapon = { ... }
-  end
+  local WeaponState
+  local options
 
   before_each(function()
     WowStub.Reset()
-    ns = Loader.Full({ "Core/Init.lua", "Commands/Slash.lua" })
-    data = {}
-    now = 100
-    state = ns.WeaponState.New({
-      data = data,
-      now = function()
-        return now
-      end,
-    })
+    WeaponState = Loader.Load({ "Core/Constants.lua", "Domain/WeaponState.lua" }).WeaponState
+    options = { equipped = true, warnSeconds = 300, enchants = { [323] = 6947 } }
   end)
 
-  it("is unknown when the client cannot say", function()
-    WowStub.Remove("GetWeaponEnchantInfo")
-    assert.is_nil(state:Read())
-  end)
-
-  it("reads minutes, charges and enchant of both hands", function()
-    weapons(true, 600000, 40, 7, true, 120000, 0, 9)
-    local read = state:Read()
-    assert.is_true(read.mh.has)
-    assert.are.equal(10, read.mh.minutes)
-    assert.are.equal(40, read.mh.charges)
-    assert.are.equal(7, read.mh.enchantId)
-    assert.is_true(read.mh.weapon)
-    assert.is_true(read.oh.has)
-    assert.are.equal(2, read.oh.minutes)
-    assert.is_nil(read.oh.charges)
-    assert.is_nil(read.mh.itemID)
-  end)
-
-  it("reports a weapon without enchant", function()
-    weapons(false, 0, 0, 0, false, 0, 0, 0)
-    local read = state:Read()
-    assert.is_false(read.mh.has)
-    assert.is_nil(read.mh.minutes)
-    assert.is_nil(read.mh.enchantId)
-  end)
-
-  it("tells an empty off hand from a missing poison", function()
-    WowStub.state.equipment[17] = nil
-    weapons(true, 60000, 10, 7, false, 0, 0, 0)
-    local read = state:Read()
-    assert.is_false(read.oh.weapon)
-    assert.is_false(read.oh.has)
-    assert.is_true(read.mh.weapon)
-  end)
-
-  it("leaves the weapon unknown when the equipment cannot be read", function()
-    WowStub.Remove("GetInventoryItemID")
-    weapons(true, 60000, 10, 7, false, 0, 0, 0)
-    assert.is_nil(state:Read().oh.weapon)
-  end)
-
-  it("treats a hand the client does not describe as unknown", function()
-    WowStub.Set("GetWeaponEnchantInfo", function()
-      return true, 60000, 10, 7
-    end)
-    local read = state:Read()
-    assert.is_true(read.mh.has)
-    assert.is_nil(read.oh.has)
-  end)
-
-  describe("learning", function()
-    it("stores the enchant id when the enchant of the slot changes after an application", function()
-      weapons(false, 0, 0, 0, false, 0, 0, 0)
-      assert.is_true(state:NoteApplied("mh", 6947))
-      now = 104
-      weapons(true, 3600000, 80, 603, false, 0, 0, 0)
-      local read = state:Read()
-      assert.are.equal(6947, read.mh.itemID)
-      assert.are.equal(6947, data.enchants[603])
-      -- Learned for good: it survives a new instance on the same data.
-      local again = ns.WeaponState.New({ data = data })
-      weapons(true, 3600000, 80, 603, false, 0, 0, 0)
-      assert.are.equal(6947, again:Read().mh.itemID)
+  describe("Build", function()
+    it("shows an empty slot without a warning", function()
+      options.equipped = false
+      assert.same({ status = "empty", warning = false }, WeaponState.Build({ active = false }, options))
     end)
 
-    it("learns when a different poison replaces the current one", function()
-      weapons(true, 100000, 5, 603, false, 0, 0, 0)
-      state:NoteApplied("mh", 2892)
-      weapons(true, 3600000, 80, 21, false, 0, 0, 0)
-      assert.are.equal(2892, state:Read().mh.itemID)
+    it("does not warn when the client gives nothing or hides the enchant", function()
+      assert.same({ status = "unknown", warning = false }, WeaponState.Build(nil, options))
+      assert.same({ status = "unknown", warning = false }, WeaponState.Build({ unknown = true }, options))
     end)
 
-    it("learns the off hand on its own", function()
-      state:NoteApplied("oh", 3775)
-      weapons(false, 0, 0, 0, true, 3600000, 80, 44)
-      local read = state:Read()
-      assert.are.equal(3775, read.oh.itemID)
-      assert.is_nil(read.mh.itemID)
+    it("warns when nothing is applied", function()
+      assert.same({ status = "missing", warning = true }, WeaponState.Build({ active = false }, options))
     end)
 
-    it("learns nothing while the enchant has not changed", function()
-      weapons(true, 100000, 5, 603, false, 0, 0, 0)
-      state:NoteApplied("mh", 2892)
-      state:Read()
-      assert.are.same({}, data.enchants)
+    it("gives time, charges and the learned item of an active enchant", function()
+      local state = WeaponState.Build({ active = true, ms = 1799500, charges = 40, enchantID = 323 }, options)
+      assert.same({ status = "active", seconds = 1799, charges = 40, itemID = 6947, warning = false }, state)
     end)
 
-    it("forgets an application that never changed the weapon", function()
-      weapons(true, 100000, 5, 603, false, 0, 0, 0)
-      state:NoteApplied("mh", 2892)
-      now = 100 + ns.Constants.POISON_PENDING_SECONDS + 1
-      state:Read()
-      weapons(true, 100000, 5, 21, false, 0, 0, 0)
-      state:Read()
-      assert.are.same({}, data.enchants)
+    it("warns below the threshold and not at it", function()
+      assert.is_true(WeaponState.Build({ active = true, ms = 299999 }, options).warning)
+      assert.is_false(WeaponState.Build({ active = true, ms = 300000 }, options).warning)
     end)
 
-    it("notes an application while the weapons are unreadable", function()
-      WowStub.Remove("GetWeaponEnchantInfo")
-      assert.is_true(state:NoteApplied("mh", 6947))
-      weapons(true, 100000, 5, 77, false, 0, 0, 0)
-      WowStub.Set("GetWeaponEnchantInfo", function()
-        return unpack(WowStub.state.weapon, 1, 8)
-      end)
-      state:Read()
-      assert.are.equal(6947, data.enchants[77])
+    it("never warns about time with a zero threshold", function()
+      options.warnSeconds = 0
+      assert.is_false(WeaponState.Build({ active = true, ms = 1000 }, options).warning)
     end)
 
-    it("refuses an unknown slot", function()
-      assert.is_false(state:NoteApplied("ranged", 1))
+    it("hides zero charges and unknown time", function()
+      local state = WeaponState.Build({ active = true, charges = 0 }, options)
+      assert.is_nil(state.charges)
+      assert.is_nil(state.seconds)
+      assert.is_false(state.warning)
     end)
   end)
 
-  it("creates its own persisted table and uses the platform clock by default", function()
-    local plain = ns.WeaponState.New()
-    assert.is_table(plain.data.enchants)
-    assert.are.equal(1000, plain.now())
-    local kept = { enchants = "garbage" }
-    ns.WeaponState.New({ data = kept })
-    assert.is_table(kept.enchants)
-    WowStub.Remove("GetTime")
-    assert.are.equal(0, ns.WeaponState.New().now())
+  it("formats time left", function()
+    assert.equal("", WeaponState.FormatTime(nil))
+    assert.equal("0s", WeaponState.FormatTime(-3))
+    assert.equal("42s", WeaponState.FormatTime(42))
+    assert.equal("4:05", WeaponState.FormatTime(245))
+    assert.equal("10m", WeaponState.FormatTime(600))
+    assert.equal("59m", WeaponState.FormatTime(3599))
+    assert.equal("1h", WeaponState.FormatTime(3600))
+  end)
+
+  describe("Learner", function()
+    local enchants, learner
+
+    before_each(function()
+      enchants = {}
+      learner = WeaponState.NewLearner(enchants)
+    end)
+
+    it("learns the item when the enchant starts after a click", function()
+      learner:Observe(16, { active = false }, 100)
+      learner:NoteApply(16, 8928, 100)
+      assert.is_false(learner:Observe(16, { active = false }, 101))
+      assert.is_true(learner:Observe(16, { active = true, ms = 3600000, enchantID = 625 }, 103))
+      assert.same({ [625] = 8928 }, enchants)
+    end)
+
+    it("learns when the same enchant is renewed", function()
+      learner:Observe(16, { active = true, ms = 60000, enchantID = 625 }, 100)
+      learner:NoteApply(16, 8928, 100)
+      assert.is_false(learner:Observe(16, { active = true, ms = 59000, enchantID = 625 }, 101))
+      assert.is_true(learner:Observe(16, { active = true, ms = 3600000, enchantID = 625 }, 103))
+      assert.same({ [625] = 8928 }, enchants)
+    end)
+
+    it("learns when the enchant changes to another one", function()
+      learner:Observe(17, { active = true, ms = 60000, enchantID = 7 }, 100)
+      learner:NoteApply(17, 2892, 100)
+      assert.is_true(learner:Observe(17, { active = true, ms = 3600000, enchantID = 8 }, 103))
+      assert.same({ [8] = 2892 }, enchants)
+    end)
+
+    it("forgets a click after the learning window", function()
+      learner:Observe(16, { active = false }, 100)
+      learner:NoteApply(16, 8928, 100)
+      assert.is_false(learner:Observe(16, { active = false }, 131))
+      assert.is_false(learner:Observe(16, { active = true, ms = 3600000, enchantID = 625 }, 132))
+      assert.same({}, enchants)
+    end)
+
+    it("learns nothing without a click", function()
+      learner:Observe(16, { active = false }, 100)
+      assert.is_false(learner:Observe(16, { active = true, ms = 3600000, enchantID = 625 }, 101))
+      assert.same({}, enchants)
+    end)
+
+    it("learns nothing from an enchant without an id", function()
+      learner:NoteApply(16, 8928, 100)
+      assert.is_false(learner:Observe(16, { active = true, ms = 3600000 }, 101))
+      assert.same({}, enchants)
+    end)
   end)
 end)

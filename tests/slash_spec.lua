@@ -1,174 +1,89 @@
-local Loader = dofile("tests/support/loader.lua")
+describe("Slash commands", function()
+  local ns, messages
 
-describe("Slash", function()
-  local ns, printed, realPrint
+  local function run(input)
+    for index = #messages, 1, -1 do
+      messages[index] = nil
+    end
+    SlashCmdList.RAS(input)
+    return messages
+  end
 
-  local function text()
-    return table.concat(printed, "\n")
+  local function contains(list, text)
+    for _, line in ipairs(list) do
+      if line:find(text, 1, true) then
+        return true
+      end
+    end
+    return false
   end
 
   before_each(function()
     WowStub.Reset()
-    printed = {}
-    realPrint = _G.print
-    _G.print = function(line)
-      printed[#printed + 1] = line
-    end
-    ns = Loader.Full({ "Core/Init.lua" })
-    ns.store = ns.Store.Open({})
-  end)
-
-  after_each(function()
-    _G.print = realPrint
-    _G.SLASH_RAS1, _G.SLASH_RAS2 = nil, nil
+    WowStub.SetBag({ { 8928, 10 }, { 6948, 1 } })
+    WowStub.state.names[8928] = "Instant Poison VI"
+    ns = WowStub.LoadAddon()
+    messages = WowStub.Messages()
   end)
 
   it("registers /ras and /rogueassistant", function()
-    assert.are.equal("/ras", _G.SLASH_RAS1)
-    assert.are.equal("/rogueassistant", _G.SLASH_RAS2)
-    assert.are.equal(ns.Slash.Dispatch, _G.SlashCmdList.RAS)
+    assert.equal("/ras", SLASH_RAS1)
+    assert.equal("/rogueassistant", SLASH_RAS2)
   end)
 
-  describe("/ras", function()
-    it("opens the options, with or without spaces", function()
-      local opened = 0
-      ns.options = {
-        Open = function()
-          opened = opened + 1
-        end,
-      }
-      for _, line in ipairs({ "", "  " }) do
-        ns.Slash.Dispatch(line)
-      end
-      assert.are.equal(2, opened)
-      assert.are.same({}, printed)
-    end)
-
-    it("says the addon is inactive without options or when disabled", function()
-      ns.Slash.Dispatch("")
-      assert.is_truthy(text():find("not active on this character", 1, true))
-      printed = {}
-      ns.options = { Open = error }
-      ns.disabled = "not_rogue"
-      ns.Slash.Dispatch("")
-      assert.is_truthy(text():find("not active on this character", 1, true))
-    end)
-
-    it("lists the commands in /ras help", function()
-      ns.Slash.Dispatch("help")
-      assert.is_truthy(text():find("open the options", 1, true))
-      assert.is_truthy(text():find("/ras unlock", 1, true))
-      assert.is_truthy(text():find("/ras lock", 1, true))
-      assert.is_truthy(text():find("/ras debug", 1, true))
-    end)
+  it("prints help with no command, and for an unknown one", function()
+    assert.is_true(contains(run(""), "/ras unlock"))
+    local out = run("dance")
+    assert.is_true(contains(out, "Unknown command: dance"))
+    assert.is_true(contains(out, "/ras warn"))
   end)
 
-  describe("unlock and lock", function()
-    local events
-
-    before_each(function()
-      events = {}
-      ns.bus = ns.EventBus.New()
-      for _, event in ipairs({ "layout.unlock", "layout.lock" }) do
-        ns.bus:Subscribe(event, function()
-          events[#events + 1] = event
-        end)
-      end
-    end)
-
-    it("publish the layout events", function()
-      ns.Slash.Dispatch("unlock")
-      assert.is_truthy(text():find("Elements unlocked", 1, true))
-      ns.Slash.Dispatch("LOCK")
-      assert.is_truthy(text():find("Elements locked", 1, true))
-      assert.are.same({ "layout.unlock", "layout.lock" }, events)
-    end)
-
-    it("publish nothing in combat", function()
-      WowStub.state.inCombat = true
-      ns.Slash.Dispatch("unlock")
-      assert.is_truthy(text():find("cannot be changed in combat", 1, true))
-      assert.are.same({}, events)
-    end)
-
-    it("say so when the addon is not active", function()
-      ns.disabled = "not_rogue"
-      ns.Slash.Dispatch("lock")
-      assert.is_truthy(text():find("not active on this character", 1, true))
-      ns.disabled, ns.bus = nil, nil
-      printed = {}
-      ns.Slash.Dispatch("unlock")
-      assert.is_truthy(text():find("not active on this character", 1, true))
-      assert.are.same({}, events)
-    end)
+  it("unlocks, locks and resets the bar", function()
+    assert.is_true(contains(run("unlock"), "Bar unlocked"))
+    assert.is_true(ns.Bar.handle:IsShown())
+    assert.is_true(contains(run("LOCK"), "Bar locked."))
+    assert.is_false(ns.Bar.handle:IsShown())
+    assert.is_true(contains(run("reset"), "default position"))
   end)
 
-  it("prints help and rejects unknown commands", function()
-    ns.Slash.Dispatch("help")
-    assert.is_truthy(text():find("/ras debug", 1, true))
-    printed = {}
-    ns.Slash.Dispatch("bogus now")
-    assert.is_truthy(text():find("Unknown command 'bogus'.", 1, true))
-    assert.is_truthy(text():find("Commands:", 1, true))
+  it("refuses to unlock or reset in combat", function()
+    WowStub.state.inCombat = true
+    assert.is_true(contains(run("unlock"), "Not possible in combat"))
+    assert.is_true(contains(run("reset"), "Not possible in combat"))
   end)
 
-  it("prints the debug help for a missing or unknown subcommand", function()
-    ns.Slash.Dispatch("debug")
-    assert.is_truthy(text():find("Debug commands:", 1, true))
-    assert.is_truthy(text():find("selftest", 1, true))
-    printed = {}
-    ns.Slash.Dispatch("debug nothing")
-    assert.is_truthy(text():find("Debug commands:", 1, true))
+  it("sets the warning threshold and rejects bad values", function()
+    assert.is_true(contains(run("warn 10"), "below 10 minutes"))
+    assert.equal(10, RogueAssistantDB.warnMinutes)
+    for _, bad in ipairs({ "warn", "warn -1", "warn 61", "warn 2.5", "warn abc" }) do
+      assert.is_true(contains(run(bad), "Usage: /ras warn"), bad)
+    end
+    assert.equal(10, RogueAssistantDB.warnMinutes)
   end)
 
-  it("runs debug probe, prints NN key=value lines and saves them bounded", function()
-    ns.Slash.Dispatch("debug probe")
-    assert.is_truthy(printed[1]:match("^01 class=.*ROGUE"))
-    assert.are.equal(#ns.Probe.ITEMS, #ns.store:Debug().lastProbe)
-    assert.is_truthy(text():find("probe lines saved", 1, true))
+  it("prints the bag items with their kind", function()
+    local out = run("debug bags")
+    assert.is_true(contains(out, "8928 x 10, Instant Poison VI, poison"))
+    assert.is_true(contains(out, "6948 x 1, ?, -"))
+    WowStub.state.bags = {}
+    assert.is_true(contains(run("debug bags"), "No items found"))
   end)
 
-  it("runs debug probe without a store", function()
-    ns.store = nil
-    ns.Slash.Dispatch("debug probe")
-    assert.is_falsy(text():find("probe lines saved", 1, true))
-    assert.is_truthy(printed[1]:match("^01 "))
+  it("prints the weapon enchants", function()
+    RogueAssistantDB.enchants[625] = 8928
+    WowStub.state.weapon = { true, 60000, 0, 625, WowStub.Secret, 0, 0, 0 }
+    local out = run("debug weapon")
+    assert.is_true(contains(out, "Main hand: active=true, ms=60000, charges=0, enchantID=625, itemID=8928"))
+    assert.is_true(contains(out, "Off hand: active=secret"))
+    _G.GetWeaponEnchantInfo = nil
+    assert.is_true(contains(run("debug weapon"), "gave nothing"))
   end)
 
-  it("runs debug bags, spells, auras and selftest", function()
-    WowStub.state.bags = { [0] = { size = 1, [1] = { itemID = 5, stackCount = 2 } } }
-    ns.Slash.Dispatch("debug bags")
-    assert.is_truthy(text():find("bag=0 slot=1 itemID=5 count=2 name=Item5", 1, true))
-    printed = {}
-    ns.Slash.Dispatch("debug spells")
-    assert.is_truthy(text():find("not readable", 1, true))
-    printed = {}
-    ns.Slash.Dispatch("debug auras")
-    assert.is_truthy(text():find("Player buffs", 1, true))
-    printed = {}
-    ns.Slash.Dispatch("debug selftest")
-    assert.is_truthy(text():find("client APIs", 1, true))
-  end)
-
-  it("reports a handler that raises without propagating", function()
-    ns.Slash.RegisterDebug("boom", function()
-      error("bad")
-    end, "cmd.debug.probe")
-    assert.has_no.errors(function()
-      ns.Slash.Dispatch("debug boom")
-    end)
-    assert.is_truthy(text():find("Error in /ras boom", 1, true))
-  end)
-
-  it("lets later phases register and replace commands", function()
-    local calls = {}
-    ns.Slash.Register("extra", function(rest)
-      calls[#calls + 1] = "first:" .. rest
-    end, "cmd.help.lock")
-    ns.Slash.Register("extra", function(rest)
-      calls[#calls + 1] = "second:" .. rest
-    end, "cmd.help.lock")
-    ns.Slash.Dispatch("extra  some args ")
-    assert.are.same({ "second:some args" }, calls)
+  it("answers in Spanish on a Spanish client", function()
+    WowStub.Reset()
+    WowStub.state.locale = "esES"
+    WowStub.LoadAddon()
+    messages = WowStub.Messages()
+    assert.is_true(contains(run("lock"), "Barra bloqueada."))
   end)
 end)
