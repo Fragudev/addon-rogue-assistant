@@ -1,0 +1,29 @@
+RogueAssistant/Core/Init.lua
+  s_8e661c4730a852::t_a0fc1a0abeb288 14,57-58
+RogueAssistant/UI/Bar.lua
+  s_8e661c4730a852::t_22061852815ca5 38,42,103-117
+RogueAssistant/UI/Flyout.lua
+  s_8e661c4730a852::t_0666dfffd5af22 46-47,49
+docs/API_NOTES.md
+  s_8e661c4730a852::t_67fbcf687a725e 59-63,71-72
+tests/bar_spec.lua
+  s_8e661c4730a852::t_09d6f3c12263a4 88-110
+tests/stubs/wow_api.lua
+  s_8e661c4730a852::t_0213823b5ebe3e 24,269-275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "a10ae528539da63332e10d5cedd3d8d012a613ec",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
