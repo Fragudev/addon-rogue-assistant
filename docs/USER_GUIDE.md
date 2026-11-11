@@ -38,8 +38,8 @@ out of combat. For **World of Warcraft: Forever**.
 | Red glow | Nothing is applied (the button reads **Missing**) or a line has less than 5 minutes left. |
 
 On Forever a weapon can carry a poison and a stone (or weightstone, or oil) at the same time, so the button can show two
-lines. The addon reads them from what the game reports for the weapon and from the weapon's tooltip; this is not
-verified in game yet. If a line is missing or wrong, the output of `/ras debug weapon` with both applied helps (see
+lines. The game reports only the poison directly; the stone's time is read from the weapon's tooltip, so it moves in
+whole minutes. If a line is missing or wrong, the output of `/ras debug weapon` with both applied helps (see
 [Reporting a problem](#reporting-a-problem)).
 
 An empty off hand shows the empty slot and never warns. The buttons have no tooltip.

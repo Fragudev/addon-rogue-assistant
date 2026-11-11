@@ -24,29 +24,20 @@ They must be measured again on the live client (launch was 2026-11-05).
   assumes combat, so it never touches a secure frame by mistake.
 - `GetWeaponEnchantInfo` returns `hasMH, mhMs, mhCharges, mhEnchantId, hasOH, ohMs, ohCharges, ohEnchantId`. An enchant
   id of 0 is treated as "no id".
-- **Poison and stone on one weapon.** On Forever a weapon can carry a poison and a temporary enchant (sharpening stone,
-  weightstone) at the same time, each hand on its own (Forever class guides, for example
-  [wowfdb](https://wowfdb.com/classes/rogue/utility/) and
-  [conquestcapped](https://conquestcapped.com/guides/wow-forever/wow-forever-rogue-overview/), citing Blizzard's
-  changes). How the client reports both is **not measured**: `GetWeaponEnchantInfo` has one set of values per hand.
-  The second may come as extra return values or only in the weapon tooltip. `/ras debug weapon` prints every raw
-  value of `GetWeaponEnchantInfo` and the lines of `C_TooltipInfo.GetInventoryItem` for each hand: run it with a
-  poison and a stone on the same weapon to find out.
-- **How the rows are built (assumed, `Domain/WeaponEnchants.lua`).** The API enchant gives one row: a poison when the
-  addon learned that its enchant id came from a poison, or else when it has charges (stones have none); otherwise a
-  stone. The weapon tooltip (`C_TooltipInfo.GetInventoryItem`) is read for lines ending in a time left, matched with the
-  client strings `ITEM_ENCHANT_TIME_LEFT_HOURS`, `_MIN` and `_SEC` ("%s (%d min)", "|4singular:plural;" grammar
-  allowed; English words as a fallback). With two such lines, the poison is the line whose text is a poison item name
-  (`C_Item.GetItemNameByID`), or else the line whose time is closest to the API enchant; the other line is the stone.
-  Without the API enchant, each line is a poison when its text is a poison item name and a stone otherwise. Oils count
-  as stones. None of this is measured: it assumes the tooltip lists both enchants as "<name> (<n> <unit>)".
-- `GetInventoryItemID("player", 17)` returns nil for an empty slot; `Api.GetEquippedItemID` turns that into `false`
-  and keeps `nil` for "API missing, failing or secret".
-- `C_Item.GetItemInfoInstant` gives the weapon class (2) and subclass without a server query; the subclass decides which
-  stone fits (sharpening: axes 0/1, polearm 6, swords 7/8, dagger 15; weightstone: maces 4/5, staff 10; any other
-  subclass gets both). Source: [ItemType](https://warcraft.wiki.gg/wiki/ItemType).
-- Bags 0 to 5 are walked with `C_Container.GetContainerNumSlots` and `C_Container.GetContainerItemInfo` (`itemID`,
-  `stackCount`).
+- **Poison and stone on one weapon (measured on Forever, 2026-11-11, `/ras debug weapon`).** A weapon can carry a
+  poison and a temporary enchant (sharpening stone, weightstone) at the same time, each hand on its own.
+  - `GetWeaponEnchantInfo` returns 12 values (main hand, off hand, ranged) and reports **only the poison**:
+    `true, 1669925, 60, 323, true, 1790515, 60, 323, false, nil, nil, nil` with Instant Poison (enchant 323, 60
+    charges) and a weightstone on both maces.
+  - The weapon tooltip (`C_TooltipInfo.GetInventoryItem`) lists **both**, in green lines:
+    `Weighted +6 (30 min)` and `Instant Poison (28 min) (60 Charges)`. Only the poison line shows charges, and the
+    tooltip time is in whole minutes.
+- **How the rows are built (`Domain/WeaponEnchants.lua`).** Tooltip lines ending in a time left, optionally followed
+  by `(N <word>)` charges, are read with the client strings `ITEM_ENCHANT_TIME_LEFT_HOURS`, `_MIN` and `_SEC`
+  ("|4singular:plural;" grammar allowed; English words as a fallback). A line is a poison when it shows charges or its
+  text is a poison item name (`C_Item.GetItemNameByID`), and a stone otherwise; oils count as stones. The API enchant
+  then replaces the row of its kind with its exact time and charges: a poison when the addon learned that its enchant
+  id came from a poison, or else when it has charges.
 
 ### Item ids (`Data/Items.lua`)
 

@@ -28,7 +28,8 @@
   in combat, so it is rebuilt when the fight ends; meanwhile the counts still update and a spent item is greyed out.
 - **Timers and charges.** On Forever a weapon can carry a poison and a stone at once. Under each button, one line per
   enchant: a small poison icon with the poison's time left and a small stone icon with the stone's. Above it, the
-  poison's charges. How the game reports both enchants is not verified yet (see [docs/API_NOTES.md](docs/API_NOTES.md)).
+  poison's charges. The stone's time comes from the weapon tooltip, in whole minutes (see
+  [docs/API_NOTES.md](docs/API_NOTES.md)).
 - **Warning.** A red glow when a weapon has nothing applied ("Missing") or less than 5 minutes left (`/ras warn`).
 - **Movable.** `/ras unlock` highlights an area over the buttons to drag the bar; `/ras lock` hides it and only the
   buttons are left. The bar always starts locked.

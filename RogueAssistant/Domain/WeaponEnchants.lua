@@ -1,9 +1,8 @@
 local _, ns = ...
 
 -- What is on a weapon, as the rows under its button: a poison and a stone (or weightstone, or oil) can sit on the same
--- weapon on Forever. GetWeaponEnchantInfo reports one enchant per hand; the weapon tooltip lists every temporary
--- enchant with its time left ("Instant Poison VI (30 min)", "Sharpened (+8 Damage) (25 min)"). Both are combined here.
--- How the client reports both enchants is not measured yet (docs/API_NOTES.md).
+-- weapon on Forever. Measured: GetWeaponEnchantInfo reports only the poison, and the weapon tooltip lists both with
+-- their time left ("Weighted +6 (30 min)", "Instant Poison (28 min) (60 Charges)"). Both are combined here.
 local WeaponEnchants = {}
 
 local Items = ns.Items
@@ -35,13 +34,28 @@ function WeaponEnchants.Units(formats)
   return units
 end
 
--- The temporary enchants of a weapon tooltip: { name, seconds } for each line ending in a time left.
+-- The temporary enchants of a weapon tooltip: { name, seconds, charges } for each line with a time left. Measured on
+-- Forever: "Weighted +6 (30 min)" and "Instant Poison (28 min) (60 Charges)"; only poisons show charges.
 function WeaponEnchants.ParseTooltip(lines, units)
   local enchants = {}
   for _, line in ipairs(lines or {}) do
-    local name, amount, word = line:match("^(.-) %((%d+) ([^%)]+)%)$")
-    if name and units[word] then
-      enchants[#enchants + 1] = { name = name, seconds = tonumber(amount) * units[word] }
+    local init = 1
+    while true do
+      local first, last, amount, word = line:find(" %((%d+) ([^%)]+)%)", init)
+      if not first then
+        break
+      end
+      local rest = line:sub(last + 1)
+      local charges = rest:match("^ %((%d+) [^%)]+%)$")
+      if units[word] and first > 1 and (rest == "" or charges) then
+        enchants[#enchants + 1] = {
+          name = line:sub(1, first - 1),
+          seconds = tonumber(amount) * units[word],
+          charges = charges and tonumber(charges) or nil,
+        }
+        break
+      end
+      init = last + 1
     end
   end
   return enchants
@@ -64,67 +78,36 @@ local function apiKind(enchant, options)
   return "stone"
 end
 
-local function nameKind(name, options)
-  return options.poisonNames[name] and "poison" or "stone"
-end
-
--- Of two or more tooltip enchants, the one that is not the API enchant of `kind` and `seconds`.
-local function otherLine(tooltip, kind, seconds, options)
-  local apiLine
-  for _, line in ipairs(tooltip) do
-    if nameKind(line.name, options) == "poison" then
-      apiLine = kind == "poison" and line or nil
-      if kind ~= "poison" then
-        return line
-      end
-    end
+-- The kind of a tooltip line: a poison when it shows charges or its text is a poison item name, a stone otherwise.
+local function lineKind(line, options)
+  if line.charges or options.poisonNames[line.name] then
+    return "poison"
   end
-  if not apiLine then
-    local best
-    for _, line in ipairs(tooltip) do
-      local distance = math.abs(line.seconds - (seconds or line.seconds))
-      if not best or distance < best then
-        best, apiLine = distance, line
-      end
-    end
-  end
-  for _, line in ipairs(tooltip) do
-    if line ~= apiLine then
-      return line
-    end
-  end
-  return nil
+  return "stone"
 end
 
 -- The rows of a weapon, poison first: { kind = "poison"|"stone", seconds, charges }.
 --   enchant   entry of Api.GetWeaponEnchants, or nil
 --   tooltip   result of ParseTooltip
 --   options   { enchants = enchantID -> itemID, poisonNames = item name -> true }
+-- Each tooltip line gives the row of its kind. The API enchant (on Forever, the poison) replaces the row of its kind
+-- with its exact time and charges.
 function WeaponEnchants.Rows(enchant, tooltip, options)
-  tooltip = tooltip or {}
   local byKind = {}
+  for _, line in ipairs(tooltip or {}) do
+    local kind = lineKind(line, options)
+    if byKind[kind] then
+      kind = other(kind)
+    end
+    byKind[kind] = byKind[kind] or { kind = kind, seconds = line.seconds, charges = line.charges }
+  end
   if enchant and enchant.active then
     local kind = apiKind(enchant, options)
-    local seconds = enchant.ms and math.floor(enchant.ms / 1000) or nil
-    local row = { kind = kind, seconds = seconds }
+    local row = { kind = kind, seconds = enchant.ms and math.floor(enchant.ms / 1000) or nil }
     if kind == "poison" and enchant.charges and enchant.charges > 0 then
       row.charges = enchant.charges
     end
     byKind[kind] = row
-    if #tooltip >= 2 then
-      local line = otherLine(tooltip, kind, seconds, options)
-      if line then
-        byKind[other(kind)] = { kind = other(kind), seconds = line.seconds }
-      end
-    end
-  else
-    for _, line in ipairs(tooltip) do
-      local kind = nameKind(line.name, options)
-      if byKind[kind] then
-        kind = other(kind)
-      end
-      byKind[kind] = byKind[kind] or { kind = kind, seconds = line.seconds }
-    end
   end
   local rows = {}
   for _, kind in ipairs({ "poison", "stone" }) do

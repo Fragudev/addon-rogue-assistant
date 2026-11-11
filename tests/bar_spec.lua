@@ -156,6 +156,25 @@ describe("Bar", function()
     assert.equal("40", weapon(16).charges:GetText())
   end)
 
+  it("shows the poison and the weightstone measured on Forever", function()
+    state.items[1001] = { classID = 2, subclassID = 4 }
+    state.weapon = { true, 1669925, 60, 323, true, 1790515, 60, 323, false }
+    state.tooltips[16] = {
+      { "Rock on Stick" },
+      { "One-Hand", "Mace" },
+      { "Weighted +6 (30 min)" },
+      { "Instant Poison (28 min) (60 Charges)" },
+      { "Durability 81 / 90" },
+    }
+    WowStub.Update(0.3)
+    local rows = weapon(16).rows
+    assert.equal("Interface\\Icons\\Trade_BrewPoison", rows[1].icon:GetTexture())
+    assert.equal("27m", rows[1].text:GetText())
+    assert.equal("Interface\\Icons\\INV_Stone_SharpeningStone_01", rows[2].icon:GetTexture())
+    assert.equal("30m", rows[2].text:GetText())
+    assert.equal("60", weapon(16).charges:GetText())
+  end)
+
   it("shows a single stone row when only a stone is applied", function()
     state.weapon = { true, 600000, 0, 1643, false, 0, 0, 0 }
     WowStub.Update(0.3)

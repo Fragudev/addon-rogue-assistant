@@ -40,6 +40,21 @@ describe("WeaponEnchants", function()
       }, WeaponEnchants.ParseTooltip(lines, units))
     end)
 
+    it("reads the measured Forever lines, charges included", function()
+      local lines = {
+        "Rock on Stick",
+        "One-Hand | Mace",
+        "Chance on hit: Bash the target in the face, causing 7 Physical damage every 2 sec for 20 sec.",
+        "Weighted +6 (30 min)",
+        "Instant Poison (28 min) (60 Charges)",
+        "Durability 81 / 90",
+      }
+      assert.same({
+        { name = "Weighted +6", seconds = 1800 },
+        { name = "Instant Poison", seconds = 1680, charges = 60 },
+      }, WeaponEnchants.ParseTooltip(lines, units))
+    end)
+
     it("gives nothing without lines", function()
       assert.same({}, WeaponEnchants.ParseTooltip(nil, units))
     end)
@@ -71,27 +86,38 @@ describe("WeaponEnchants", function()
       assert.same({ { kind = "poison", seconds = 600 } }, WeaponEnchants.Rows(learnedPoison, {}, options))
     end)
 
-    it("treats one tooltip line as the same enchant the API reports", function()
-      local tooltip = { { name = "Something", seconds = 1800 } }
+    it("adds the stone of the tooltip to the poison the API reports (measured on Forever)", function()
+      local measured = { active = true, ms = 1669925, charges = 60, enchantID = 323 }
+      local tooltip = {
+        { name = "Weighted +6", seconds = 1800 },
+        { name = "Instant Poison", seconds = 1680, charges = 60 },
+      }
+      assert.same({
+        { kind = "poison", seconds = 1669, charges = 60 },
+        { kind = "stone", seconds = 1800 },
+      }, WeaponEnchants.Rows(measured, tooltip, options))
+    end)
+
+    it("keeps a stone line whose time is close to the poison's", function()
+      local tooltip = { { name = "Weighted +6", seconds = 1800 } }
+      assert.same({
+        { kind = "poison", seconds = 1790, charges = 40 },
+        { kind = "stone", seconds = 1800 },
+      }, WeaponEnchants.Rows(poison, tooltip, options))
+    end)
+
+    it("does not repeat the poison the API reports when the tooltip lists it too", function()
+      local tooltip = { { name = "Instant Poison VI", seconds = 1800 } }
       assert.same({ { kind = "poison", seconds = 1790, charges = 40 } }, WeaponEnchants.Rows(poison, tooltip, options))
     end)
 
-    it("shows a poison and a stone, poison first, naming the poison by its item name", function()
-      local tooltip =
-        { { name = "Sharpened (+8 Damage)", seconds = 1500 }, { name = "Instant Poison VI", seconds = 1800 } }
-      assert.same({
-        { kind = "poison", seconds = 1790, charges = 40 },
-        { kind = "stone", seconds = 1500 },
-      }, WeaponEnchants.Rows(poison, tooltip, options))
-    end)
-
-    it("matches the API enchant to the closest tooltip time when no name is known", function()
+    it("knows a poison line by its charges even when its name is unknown", function()
       options.poisonNames = {}
-      local tooltip = { { name = "A", seconds = 1500 }, { name = "B", seconds = 1800 } }
+      local tooltip = { { name = "Mystery", seconds = 600, charges = 12 }, { name = "Sharpened +8", seconds = 900 } }
       assert.same({
-        { kind = "poison", seconds = 1790, charges = 40 },
-        { kind = "stone", seconds = 1500 },
-      }, WeaponEnchants.Rows(poison, tooltip, options))
+        { kind = "poison", seconds = 600, charges = 12 },
+        { kind = "stone", seconds = 900 },
+      }, WeaponEnchants.Rows(nil, tooltip, options))
     end)
 
     it("reads the tooltip alone when the API gives nothing", function()
