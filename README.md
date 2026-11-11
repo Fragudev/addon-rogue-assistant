@@ -1,7 +1,8 @@
 <h1 align="center">Rogue Assistant</h1>
 
 <p align="center">
-  A cooldown and aura tracker and a one-button poison menu for rogues in <b>World of Warcraft: Forever</b>.
+  One button per weapon: pick a poison, a sharpening stone or an oil from your bags and apply it, in or out of combat.
+  For <b>World of Warcraft: Forever</b>.
 </p>
 
 <p align="center">
@@ -13,27 +14,22 @@
 
 > [!NOTE]
 > **Beta.** Everything described here is implemented and covered by automated tests, but it has **not been verified on
-> the game client yet**. Several spell and item ids are Classic Era ids that nobody has confirmed on Forever, and the
-> secure poison button is untested in game. See [docs/API_NOTES.md](docs/API_NOTES.md) for what is assumed.
+> the game client yet**. The item ids are Classic Era ids that nobody has confirmed on Forever, and the secure buttons
+> are untested in game. See [docs/API_NOTES.md](docs/API_NOTES.md) for what is assumed.
 
 ## What it does
 
-- **Poison button.** One button holds every poison in your bags. Click it to open the list, left click a poison to
-  apply it to your main hand, right click to apply it to your off hand. Shift + left / right click reapplies the last
-  poison used on that hand. Under the button you see how many minutes (and charges) each weapon's poison has left; the
-  list can open up, down, left or right, and those status lines can be hidden.
-- **Poison reminders.** A chat line and a short on-screen banner, out of combat, when a weapon has no poison, a poison
-  is about to expire, its charges run low or the stock in your bags is getting short. Each trigger (entering an
-  instance, a ready check, the end of combat) has its own switch. Stock reminders start once you have applied a poison
-  through the button (the addon learns which poison is on the weapon).
-- **Tracker.** Three groups of icons in the style of Blizzard's Cooldown Manager: your **essential cooldowns**, your
-  **buffs** and your **debuffs on the target**. Only what your character knows is shown. Each group can show icons or
-  bars, and you can add or remove any spell by id or name.
-- **Everything can be moved.** The poison button, its weapon status lines, the reminder banner and every tracker group
-  are draggable once you unlock them with `/ras unlock` or the *Unlock elements* button in the options. While they are
-  unlocked each one shows a highlighted background and its name.
-- **Options.** `/ras` opens a panel in the game's Settings window for everything above.
-- **Rogues only.** On any other class the addon turns itself off.
+- **Two weapon buttons**, main hand (MH) and off hand (OH). Each shows what the weapon carries.
+- **Click a weapon** to open the list of what you can put on it: the poisons, sharpening stones, weightstones and
+  weapon oils in your bags, strongest first, with how many you have. Sharpening stones are offered only for edged
+  weapons and weightstones only for blunt ones.
+- **Click an item** in the list to apply it to that weapon. The list closes.
+- **In combat too.** Opening the list and applying an item work in combat. The game does not let addons change the list
+  in combat, so it is rebuilt when the fight ends; meanwhile the counts still update and a spent item is greyed out.
+- **Timer and charges.** Under each button, the time left on the weapon; above it, the charges when the game reports
+  them.
+- **Warning.** A red glow when a weapon has nothing applied ("Missing") or less than 5 minutes left (`/ras warn`).
+- **Movable.** `/ras unlock` shows a handle to drag the bar; `/ras lock` hides it. The bar always starts locked.
 
 ## Install
 
@@ -43,34 +39,30 @@
 2. Unzip it into the game's AddOns folder, so that the result is
    `World of Warcraft/<forever client folder>/Interface/AddOns/RogueAssistant/`.
 3. Restart the game and make sure **Rogue Assistant** is enabled in the AddOns list.
-4. Log in with a rogue and type `/ras`.
 
 Updating: delete the old `RogueAssistant` folder and unzip the new one. Your settings live in the `RogueAssistantDB`
-saved variable, not in the addon folder.
+saved variable, not in the addon folder. Settings of versions before this redesign are discarded once.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/ras` | Opens the options. |
-| `/ras help` | Lists the commands. |
-| `/ras unlock` | Unlocks the poison button, its status lines, the reminder banner and the tracker groups so you can drag them. |
-| `/ras lock` | Locks them again. |
-| `/ras debug` | Lists the diagnostic commands (`probe`, `bags`, `spells`, `auras`, `selftest`). |
+| `/ras` | Lists the commands. |
+| `/ras unlock` | Shows the handle to drag the bar. |
+| `/ras lock` | Hides the handle. |
+| `/ras reset` | Moves the bar back to its default position. |
+| `/ras warn <minutes>` | The warning lights up below this many minutes left (0 to 60; 0 warns only when nothing is applied). |
+| `/ras debug bags` | Prints the id, count and name of every item in your bags. |
+| `/ras debug weapon` | Prints what the game reports about both weapon enchants. |
 
-`/rogueassistant` works as well. The layout cannot be changed in combat.
+`/rogueassistant` works as well. The bar cannot be moved in combat.
 
 ## Secret values
 
-In arenas, battlegrounds and some encounters the game hides combat data from addons ("secret values"). Rogue Assistant
-never guesses and never tries to read around the restriction:
-
-- Every game call goes through one wrapper that returns nothing when the value is hidden or the call is missing.
-- When a cooldown or aura is hidden, the icon says so (a `?` and a tooltip) instead of showing a wrong number or a
-  wrong "ready". Hidden timers are handed only to the game's own cooldown widget, which can draw them without the
-  addon ever reading them.
-- Bars need readable numbers; a hidden entry stays an icon.
-- The addon never registers the combat log, and it never acts on its own: every click does exactly one thing.
+In arenas, battlegrounds and some encounters the game hides some values from addons ("secret values"). Rogue Assistant
+never guesses: every game call goes through one wrapper that returns nothing when the value is hidden or the call is
+missing. A hidden weapon enchant shows no timer and no warning instead of a wrong one. Applying an item does not depend
+on any of those values.
 
 ## Documentation
 
