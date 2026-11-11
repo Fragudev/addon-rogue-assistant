@@ -1,0 +1,19 @@
+docs/CURSEFORGE_DESCRIPTION.md
+  s_8e661c4730a852::t_cb1f0cbb2bb0ba 5,24-39,46,51-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "851aa659feca057bc28ac695adb5ec6d54413845",
+  "prompts": {},
+  "sessions": {
+    "s_8e661c4730a852": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3a1f160c-c6fb-48ca-a2a6-df981dbdef96",
+        "model": "unknown"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
