@@ -33,13 +33,14 @@ out of combat. For **World of Warcraft: Forever**.
 |---|---|
 | Icon | The weapon. Grey when nothing is applied. |
 | Above, left | The hand: **MH** (main hand) or **OH** (off hand). |
-| Above, right | The charges left, when the game reports any. |
-| Below | The time left: `1h`, `25m`, `4:05` or `42s`. |
-| Red glow | Nothing is applied (the button reads **Missing**) or less than 5 minutes are left. |
+| Above, right | The poison's charges left, when the game reports any. |
+| Below | One line per enchant: a poison icon with the poison's time left, a stone icon with the stone's (`1h`, `25m`, `4:05` or `42s`). |
+| Red glow | Nothing is applied (the button reads **Missing**) or a line has less than 5 minutes left. |
 
-On Forever a weapon can carry a poison and a stone at the same time. The button shows the one enchant the game reports
-for that hand; showing both is pending until we know how the game reports them. If you have both on a weapon, the
-output of `/ras debug weapon` helps (see [Reporting a problem](#reporting-a-problem)).
+On Forever a weapon can carry a poison and a stone (or weightstone, or oil) at the same time, so the button can show two
+lines. The addon reads them from what the game reports for the weapon and from the weapon's tooltip; this is not
+verified in game yet. If a line is missing or wrong, the output of `/ras debug weapon` with both applied helps (see
+[Reporting a problem](#reporting-a-problem)).
 
 An empty off hand shows the empty slot and never warns. The buttons have no tooltip.
 

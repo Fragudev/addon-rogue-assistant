@@ -16,6 +16,7 @@ Core\Api.lua
 Core\Store.lua
 Data\Items.lua
 Domain\Inventory.lua
+Domain\WeaponEnchants.lua
 Domain\WeaponState.lua
 UI\Flyout.lua
 UI\WeaponButton.lua

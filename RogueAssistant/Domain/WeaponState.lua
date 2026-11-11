@@ -7,37 +7,31 @@ local C = ns.Constants
 
 -- Display state of one weapon slot.
 --   enchant   entry of Api.GetWeaponEnchants (nil when the client gave nothing)
---   options   { equipped = true|false|nil, warnSeconds = number, enchants = enchantID -> itemID }
--- Returns { status, seconds, charges, itemID, warning } where status is "empty", "unknown", "missing" or "active".
+--   options   { equipped = true|false|nil, warnSeconds = number, rows = WeaponEnchants.Rows(...) }
+-- Returns { status, rows, charges, warning } where status is "empty", "unknown", "missing" or "active"; charges are
+-- the poison's.
 function WeaponState.Build(enchant, options)
   if options.equipped == false then
     return { status = "empty", warning = false }
   end
-  if enchant == nil or enchant.unknown then
-    return { status = "unknown", warning = false }
-  end
-  if not enchant.active then
+  local rows = options.rows or {}
+  if #rows == 0 then
+    if enchant == nil or enchant.unknown then
+      return { status = "unknown", warning = false }
+    end
     return { status = "missing", warning = true }
   end
-  local seconds
-  if enchant.ms then
-    seconds = math.floor(enchant.ms / 1000)
-  end
   local charges
-  if enchant.charges and enchant.charges > 0 then
-    charges = enchant.charges
+  local warning = false
+  for _, row in ipairs(rows) do
+    if row.kind == "poison" then
+      charges = row.charges
+    end
+    if row.seconds and row.seconds < options.warnSeconds then
+      warning = true
+    end
   end
-  local itemID
-  if enchant.enchantID then
-    itemID = options.enchants[enchant.enchantID]
-  end
-  return {
-    status = "active",
-    seconds = seconds,
-    charges = charges,
-    itemID = itemID,
-    warning = seconds ~= nil and seconds < options.warnSeconds,
-  }
+  return { status = "active", rows = rows, charges = charges, warning = warning }
 end
 
 -- "1h", "25m", "4:05" or "42s".

@@ -119,8 +119,9 @@ function Api.GetWeaponEnchantRaw()
   return values
 end
 
--- The text lines of the tooltip of the item in `slot` ("left | right"), or nil when the client gives none.
-function Api.GetInventoryTooltipLines(slot)
+-- The lines of the tooltip of the item in `slot` as { left, right } (nil for a hidden or missing text), or nil when
+-- the client gives none.
+function Api.GetInventoryTooltip(slot)
   local tooltips = namespace("C_TooltipInfo")
   local ok, data = try(tooltips and tooltips.GetInventoryItem, "player", slot)
   if not ok or type(data) ~= "table" or type(data.lines) ~= "table" then
@@ -129,14 +130,40 @@ function Api.GetInventoryTooltipLines(slot)
   local lines = {}
   for _, line in ipairs(data.lines) do
     if type(line) == "table" then
-      local text = show(line.leftText)
-      if line.rightText ~= nil and line.rightText ~= "" then
-        text = text .. " | " .. show(line.rightText)
-      end
-      lines[#lines + 1] = text
+      local left, right = readable(line.leftText), readable(line.rightText)
+      lines[#lines + 1] = {
+        left = type(left) == "string" and left or nil,
+        right = type(right) == "string" and right ~= "" and right or nil,
+        hidden = isSecret(line.leftText) or isSecret(line.rightText),
+      }
     end
   end
   return lines
+end
+
+-- The left texts of the tooltip of the item in `slot` (where the temporary enchants are listed).
+function Api.GetInventoryTooltipTexts(slot)
+  local texts = {}
+  for _, line in ipairs(Api.GetInventoryTooltip(slot) or {}) do
+    if line.left then
+      texts[#texts + 1] = line.left
+    end
+  end
+  return texts
+end
+
+-- The client strings of an enchant's time left, hours, minutes and seconds ("%s (%d min)"), nil when missing.
+function Api.GetEnchantTimeFormats()
+  local formats = {}
+  for index, name in ipairs({
+    "ITEM_ENCHANT_TIME_LEFT_HOURS",
+    "ITEM_ENCHANT_TIME_LEFT_MIN",
+    "ITEM_ENCHANT_TIME_LEFT_SEC",
+  }) do
+    local value = readable(_G[name])
+    formats[index] = type(value) == "string" and value or false
+  end
+  return formats
 end
 
 -- The item id equipped in `slot`, false when the slot is empty, nil when the client cannot tell.

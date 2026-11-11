@@ -129,12 +129,41 @@ describe("Bar", function()
     state.weapon = { true, 1800000, 40, 625, false, 0, 0, 0 }
     WowStub.Update(0.3)
     local button = weapon(16)
-    assert.equal("30m", button.timer:GetText())
+    assert.equal("30m", button.rows[1].text:GetText())
     assert.equal("40", button.charges:GetText())
     assert.equal("weapon-1001", button.icon:GetTexture())
     assert.is_false(button.icon.desaturated)
     assert.is_false(button.glow:IsShown())
     assert.equal(8928, RogueAssistantDB.enchants[625])
+  end)
+
+  it("shows a poison row and a stone row with their icons and times", function()
+    state.weapon = { true, 1800000, 40, 625, false, 0, 0, 0 }
+    state.names[8928] = "Instant Poison VI"
+    state.tooltips[16] = {
+      { "Bloodfang Dagger" },
+      { "Sharpened (+8 Damage) (25 min)" },
+      { "Instant Poison VI (30 min)" },
+    }
+    WowStub.Update(0.3)
+    local rows = weapon(16).rows
+    assert.equal("Interface\\Icons\\Trade_BrewPoison", rows[1].icon:GetTexture())
+    assert.equal("30m", rows[1].text:GetText())
+    assert.is_true(rows[1].icon:IsShown())
+    assert.equal("Interface\\Icons\\INV_Stone_SharpeningStone_01", rows[2].icon:GetTexture())
+    assert.equal("25m", rows[2].text:GetText())
+    assert.is_true(rows[2].icon:IsShown())
+    assert.equal("40", weapon(16).charges:GetText())
+  end)
+
+  it("shows a single stone row when only a stone is applied", function()
+    state.weapon = { true, 600000, 0, 1643, false, 0, 0, 0 }
+    WowStub.Update(0.3)
+    local rows = weapon(16).rows
+    assert.equal("Interface\\Icons\\INV_Stone_SharpeningStone_01", rows[1].icon:GetTexture())
+    assert.equal("10m", rows[1].text:GetText())
+    assert.is_false(rows[2].icon:IsShown())
+    assert.equal("", rows[2].text:GetText())
   end)
 
   it("shows the weapon icon while the enchant item is not known", function()
@@ -151,7 +180,8 @@ describe("Bar", function()
     assert.is_false(weapon(16).missing:IsShown())
     assert.is_true(weapon(17).glow:IsShown())
     assert.is_true(weapon(17).missing:IsShown())
-    assert.equal("", weapon(17).timer:GetText())
+    assert.equal("", weapon(17).rows[1].text:GetText())
+    assert.is_false(weapon(17).rows[1].icon:IsShown())
   end)
 
   it("does not warn for an empty off hand and shows the empty slot icon", function()
@@ -164,17 +194,17 @@ describe("Bar", function()
   it("reads the weapons only every tick", function()
     state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
     WowStub.Update(0.1)
-    assert.equal("", weapon(16).timer:GetText())
+    assert.equal("", weapon(16).rows[1].text:GetText())
     WowStub.Update(0.2)
-    assert.equal("30m", weapon(16).timer:GetText())
+    assert.equal("30m", weapon(16).rows[1].text:GetText())
   end)
 
   it("redraws on an inventory change of the player only", function()
     state.weapon = { true, 1800000, 0, 625, false, 0, 0, 0 }
     WowStub.Fire("UNIT_INVENTORY_CHANGED", "target")
-    assert.equal("", weapon(16).timer:GetText())
+    assert.equal("", weapon(16).rows[1].text:GetText())
     WowStub.Fire("UNIT_INVENTORY_CHANGED", "player")
-    assert.equal("30m", weapon(16).timer:GetText())
+    assert.equal("30m", weapon(16).rows[1].text:GetText())
   end)
 
   it("ignores ADDON_LOADED of other addons", function()

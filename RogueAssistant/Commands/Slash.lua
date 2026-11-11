@@ -46,12 +46,16 @@ end
 local function debugTooltips()
   for _, slot in ipairs(C.SLOTS) do
     local hand = L("slot." .. slot .. ".long")
-    local lines = Api.GetInventoryTooltipLines(slot)
+    local lines = Api.GetInventoryTooltip(slot)
     if not lines then
       Api.Print(L("debug.tooltip.none", hand))
     else
       for _, line in ipairs(lines) do
-        Api.Print(L("debug.tooltip.line", hand, line))
+        local text = line.hidden and "<secret>" or (line.left or "")
+        if line.right then
+          text = text .. " | " .. line.right
+        end
+        Api.Print(L("debug.tooltip.line", hand, text))
       end
     end
   end

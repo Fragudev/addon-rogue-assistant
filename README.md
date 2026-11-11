@@ -26,9 +26,9 @@
 - **Click an item** in the list to apply it to that weapon. The list closes.
 - **In combat too.** Opening the list and applying an item work in combat. The game does not let addons change the list
   in combat, so it is rebuilt when the fight ends; meanwhile the counts still update and a spent item is greyed out.
-- **Timer and charges.** Under each button, the time left; above it, the charges when the game reports them. On
-  Forever a weapon can carry a poison and a stone at once; for now the button shows the one enchant the game reports
-  (see [docs/API_NOTES.md](docs/API_NOTES.md)).
+- **Timers and charges.** On Forever a weapon can carry a poison and a stone at once. Under each button, one line per
+  enchant: a small poison icon with the poison's time left and a small stone icon with the stone's. Above it, the
+  poison's charges. How the game reports both enchants is not verified yet (see [docs/API_NOTES.md](docs/API_NOTES.md)).
 - **Warning.** A red glow when a weapon has nothing applied ("Missing") or less than 5 minutes left (`/ras warn`).
 - **Movable.** `/ras unlock` highlights an area over the buttons to drag the bar; `/ras lock` hides it and only the
   buttons are left. The bar always starts locked.

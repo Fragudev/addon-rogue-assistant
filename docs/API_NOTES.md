@@ -31,7 +31,15 @@ They must be measured again on the live client (launch was 2026-11-05).
   changes). How the client reports both is **not measured**: `GetWeaponEnchantInfo` has one set of values per hand.
   The second may come as extra return values or only in the weapon tooltip. `/ras debug weapon` prints every raw
   value of `GetWeaponEnchantInfo` and the lines of `C_TooltipInfo.GetInventoryItem` for each hand: run it with a
-  poison and a stone on the same weapon to find out. Until then each button shows the one enchant the API reports.
+  poison and a stone on the same weapon to find out.
+- **How the rows are built (assumed, `Domain/WeaponEnchants.lua`).** The API enchant gives one row: a poison when the
+  addon learned that its enchant id came from a poison, or else when it has charges (stones have none); otherwise a
+  stone. The weapon tooltip (`C_TooltipInfo.GetInventoryItem`) is read for lines ending in a time left, matched with the
+  client strings `ITEM_ENCHANT_TIME_LEFT_HOURS`, `_MIN` and `_SEC` ("%s (%d min)", "|4singular:plural;" grammar
+  allowed; English words as a fallback). With two such lines, the poison is the line whose text is a poison item name
+  (`C_Item.GetItemNameByID`), or else the line whose time is closest to the API enchant; the other line is the stone.
+  Without the API enchant, each line is a poison when its text is a poison item name and a stone otherwise. Oils count
+  as stones. None of this is measured: it assumes the tooltip lists both enchants as "<name> (<n> <unit>)".
 - `GetInventoryItemID("player", 17)` returns nil for an empty slot; `Api.GetEquippedItemID` turns that into `false`
   and keeps `nil` for "API missing, failing or secret".
 - `C_Item.GetItemInfoInstant` gives the weapon class (2) and subclass without a server query; the subclass decides which

@@ -9,6 +9,8 @@ local Api = ns.Api
 local L = ns.L
 local Inventory = ns.Inventory
 local WeaponState = ns.WeaponState
+local WeaponEnchants = ns.WeaponEnchants
+local Items = ns.Items
 local Flyout = ns.Flyout
 local WeaponButton = ns.WeaponButton
 
@@ -22,7 +24,7 @@ local EMPTY_SLOT_ICON = {
 -- Room around the buttons that the drag zone covers: the hand labels above, the timers below.
 local ZONE_SIDE = 6
 local ZONE_TOP = 18
-local ZONE_BOTTOM = 18
+local ZONE_BOTTOM = 32
 
 -- The drag zone: a highlighted area over the buttons, shown only while the bar is unlocked. It sits above the buttons,
 -- so while it is shown a click drags the bar instead of opening a list.
@@ -137,11 +139,32 @@ function Bar.IconFor(slot)
   return Api.GetEquippedTexture(slot) or EMPTY_SLOT_ICON[slot]
 end
 
+-- item name -> true for every catalog poison whose name the client knows. Rebuilt until every name has loaded.
+function Bar.PoisonNames()
+  if Bar.poisonNames and Bar.poisonNamesComplete then
+    return Bar.poisonNames
+  end
+  local names, complete = {}, true
+  for _, entry in ipairs(Items.LIST) do
+    if entry.kind == "poison" then
+      local name = Api.GetItemName(entry.itemID)
+      if name then
+        names[name] = true
+      else
+        complete = false
+      end
+    end
+  end
+  Bar.poisonNames, Bar.poisonNamesComplete = names, complete
+  return names
+end
+
 -- Reads the weapon enchants and redraws both buttons.
 function Bar.Tick(now)
   if not Bar.anchor then
     return
   end
+  Bar.units = Bar.units or WeaponEnchants.Units(Api.GetEnchantTimeFormats())
   local enchants = Api.GetWeaponEnchants()
   for _, slot in ipairs(C.SLOTS) do
     local enchant = enchants and enchants[slot]
@@ -150,10 +173,11 @@ function Bar.Tick(now)
     if equipped then
       equipped = true
     end
+    local tooltip = WeaponEnchants.ParseTooltip(Api.GetInventoryTooltipTexts(slot), Bar.units)
     local state = WeaponState.Build(enchant, {
       equipped = equipped,
       warnSeconds = Bar.db.warnMinutes * 60,
-      enchants = Bar.db.enchants,
+      rows = WeaponEnchants.Rows(enchant, tooltip, { enchants = Bar.db.enchants, poisonNames = Bar.PoisonNames() }),
     })
     WeaponButton.Render(Bar.buttons[slot], state, Bar.IconFor(slot))
   end

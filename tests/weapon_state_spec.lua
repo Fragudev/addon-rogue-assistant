@@ -7,10 +7,13 @@ describe("WeaponState", function()
   before_each(function()
     WowStub.Reset()
     WeaponState = Loader.Load({ "Core/Constants.lua", "Domain/WeaponState.lua" }).WeaponState
-    options = { equipped = true, warnSeconds = 300, enchants = { [323] = 6947 } }
+    options = { equipped = true, warnSeconds = 300, rows = {} }
   end)
 
   describe("Build", function()
+    local poisonRow = { kind = "poison", seconds = 1799, charges = 40 }
+    local stoneRow = { kind = "stone", seconds = 600 }
+
     it("shows an empty slot without a warning", function()
       options.equipped = false
       assert.same({ status = "empty", warning = false }, WeaponState.Build({ active = false }, options))
@@ -25,25 +28,34 @@ describe("WeaponState", function()
       assert.same({ status = "missing", warning = true }, WeaponState.Build({ active = false }, options))
     end)
 
-    it("gives time, charges and the learned item of an active enchant", function()
-      local state = WeaponState.Build({ active = true, ms = 1799500, charges = 40, enchantID = 323 }, options)
-      assert.same({ status = "active", seconds = 1799, charges = 40, itemID = 6947, warning = false }, state)
+    it("gives the rows and the poison charges of an active weapon", function()
+      options.rows = { poisonRow, stoneRow }
+      local state = WeaponState.Build({ active = true }, options)
+      assert.same({ status = "active", rows = { poisonRow, stoneRow }, charges = 40, warning = false }, state)
     end)
 
-    it("warns below the threshold and not at it", function()
-      assert.is_true(WeaponState.Build({ active = true, ms = 299999 }, options).warning)
-      assert.is_false(WeaponState.Build({ active = true, ms = 300000 }, options).warning)
+    it("is active from the rows even when the API hides the enchant", function()
+      options.rows = { stoneRow }
+      assert.equal("active", WeaponState.Build({ unknown = true }, options).status)
+    end)
+
+    it("warns when any row is below the threshold and not at it", function()
+      options.rows = { poisonRow, { kind = "stone", seconds = 299 } }
+      assert.is_true(WeaponState.Build({ active = true }, options).warning)
+      options.rows = { poisonRow, { kind = "stone", seconds = 300 } }
+      assert.is_false(WeaponState.Build({ active = true }, options).warning)
     end)
 
     it("never warns about time with a zero threshold", function()
       options.warnSeconds = 0
-      assert.is_false(WeaponState.Build({ active = true, ms = 1000 }, options).warning)
+      options.rows = { { kind = "poison", seconds = 1 } }
+      assert.is_false(WeaponState.Build({ active = true }, options).warning)
     end)
 
-    it("hides zero charges and unknown time", function()
-      local state = WeaponState.Build({ active = true, charges = 0 }, options)
+    it("does not warn about a row without a time and has no charges without a poison", function()
+      options.rows = { { kind = "stone" } }
+      local state = WeaponState.Build({ active = true }, options)
       assert.is_nil(state.charges)
-      assert.is_nil(state.seconds)
       assert.is_false(state.warning)
     end)
   end)
