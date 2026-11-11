@@ -34,8 +34,9 @@ function WeaponEnchants.Units(formats)
   return units
 end
 
--- The temporary enchants of a weapon tooltip: { name, seconds, charges } for each line with a time left. Measured on
--- Forever: "Weighted +6 (30 min)" and "Instant Poison (28 min) (60 Charges)"; only poisons show charges.
+-- The temporary enchants of a weapon tooltip: { name, seconds, step, charges } for each line with a time left, where
+-- step is the seconds of its unit. Measured on Forever: "Weighted +6 (30 min)" and "Instant Poison (28 min) (60
+-- Charges)"; only poisons show charges.
 function WeaponEnchants.ParseTooltip(lines, units)
   local enchants = {}
   for _, line in ipairs(lines or {}) do
@@ -51,6 +52,7 @@ function WeaponEnchants.ParseTooltip(lines, units)
         enchants[#enchants + 1] = {
           name = line:sub(1, first - 1),
           seconds = tonumber(amount) * units[word],
+          step = units[word],
           charges = charges and tonumber(charges) or nil,
         }
         break
@@ -86,7 +88,8 @@ local function lineKind(line, options)
   return "stone"
 end
 
--- The rows of a weapon, poison first: { kind = "poison"|"stone", seconds, charges }.
+-- The rows of a weapon, poison first: { kind = "poison"|"stone", seconds, step, charges }; step is set only for a row
+-- read from the tooltip.
 --   enchant   entry of Api.GetWeaponEnchants, or nil
 --   tooltip   result of ParseTooltip
 --   options   { enchants = enchantID -> itemID, poisonNames = item name -> true }
@@ -99,7 +102,7 @@ function WeaponEnchants.Rows(enchant, tooltip, options)
     if byKind[kind] then
       kind = other(kind)
     end
-    byKind[kind] = byKind[kind] or { kind = kind, seconds = line.seconds, charges = line.charges }
+    byKind[kind] = byKind[kind] or { kind = kind, seconds = line.seconds, step = line.step, charges = line.charges }
   end
   if enchant and enchant.active then
     local kind = apiKind(enchant, options)
@@ -116,6 +119,38 @@ function WeaponEnchants.Rows(enchant, tooltip, options)
     end
   end
   return rows
+end
+
+-- Counting seconds of the rows read from the tooltip. The tooltip rounds the time left up (measured on Forever: 1669925
+-- ms showed "28 min"), so the moment a reading drops, exactly that much time is left. The clock remembers when each
+-- reading started and counts down from it, never below what the reading allows.
+local Clock = {}
+Clock.__index = Clock
+
+function WeaponEnchants.NewClock()
+  return setmetatable({ readings = {} }, Clock)
+end
+
+-- Replaces the seconds of each row of `slot` that has a step greater than one second with the counted ones.
+function Clock:Apply(slot, rows, now)
+  local seen = {}
+  for _, row in ipairs(rows) do
+    if row.step and row.step > 1 and row.seconds then
+      local key = slot .. ":" .. row.kind
+      seen[key] = true
+      local reading = self.readings[key]
+      if not reading or reading.seconds ~= row.seconds then
+        reading = { seconds = row.seconds, at = now }
+        self.readings[key] = reading
+      end
+      row.seconds = math.max(row.seconds - row.step + 1, row.seconds - math.floor(now - reading.at))
+    end
+  end
+  for key in pairs(self.readings) do
+    if key:match("^(%d+):") == tostring(slot) and not seen[key] then
+      self.readings[key] = nil
+    end
+  end
 end
 
 ns.WeaponEnchants = WeaponEnchants

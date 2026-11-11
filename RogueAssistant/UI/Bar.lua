@@ -61,6 +61,7 @@ function Bar.Create(db)
   end
   Bar.db = db
   Bar.learner = WeaponState.NewLearner(db.enchants)
+  Bar.clock = WeaponEnchants.NewClock()
   Bar.unlocked = false
 
   local anchor = CreateFrame("Frame", "RogueAssistantBar", UIParent)
@@ -174,10 +175,12 @@ function Bar.Tick(now)
       equipped = true
     end
     local tooltip = WeaponEnchants.ParseTooltip(Api.GetInventoryTooltipTexts(slot), Bar.units)
+    local rows = WeaponEnchants.Rows(enchant, tooltip, { enchants = Bar.db.enchants, poisonNames = Bar.PoisonNames() })
+    Bar.clock:Apply(slot, rows, now)
     local state = WeaponState.Build(enchant, {
       equipped = equipped,
       warnSeconds = Bar.db.warnMinutes * 60,
-      rows = WeaponEnchants.Rows(enchant, tooltip, { enchants = Bar.db.enchants, poisonNames = Bar.PoisonNames() }),
+      rows = rows,
     })
     WeaponButton.Render(Bar.buttons[slot], state, Bar.IconFor(slot))
   end

@@ -175,6 +175,35 @@ describe("Bar", function()
     assert.equal("60", weapon(16).charges:GetText())
   end)
 
+  it("counts the seconds of a stone from the moment its tooltip minute drops", function()
+    state.weapon = { true, 1669925, 60, 323, false, 0, 0, 0 }
+    state.names[8928] = "Instant Poison VI"
+    local function stone(minutes)
+      state.tooltips[16] = { { "Rock on Stick" }, { "Weighted +6 (" .. minutes .. " min)" } }
+    end
+    local function stoneText()
+      return weapon(16).rows[2].text:GetText()
+    end
+    stone(5)
+    WowStub.Update(0.3)
+    assert.equal("5:00", stoneText())
+    state.time = state.time + 30
+    WowStub.Update(0.3)
+    assert.equal("4:30", stoneText())
+    state.time = state.time + 50
+    WowStub.Update(0.3)
+    assert.equal("4:01", stoneText()) -- held until the tooltip says 4 min
+    stone(4)
+    WowStub.Update(0.3)
+    assert.equal("4:00", stoneText())
+    state.time = state.time + 12
+    WowStub.Update(0.3)
+    assert.equal("3:48", stoneText())
+    stone(30) -- applied again
+    WowStub.Update(0.3)
+    assert.equal("30m", stoneText())
+  end)
+
   it("shows a single stone row when only a stone is applied", function()
     state.weapon = { true, 600000, 0, 1643, false, 0, 0, 0 }
     WowStub.Update(0.3)
