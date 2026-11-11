@@ -1,0 +1,27 @@
+RogueAssistant/Domain/WeaponEnchants.lua
+  s_4b55cc4e4cfc72::t_c346b09c433772 37-39,55,91-92,105,124-155
+RogueAssistant/UI/Bar.lua
+  s_4b55cc4e4cfc72::t_aa1f0fc7604691 64,178-179,183
+tests/weapon_enchants_spec.lua
+  s_4b55cc4e4cfc72::t_12b4e82d54803f 37-39,53-54
+docs/API_NOTES.md
+  s_4b55cc4e4cfc72::t_5f26eb90983049 41-44
+tests/bar_spec.lua
+  s_4b55cc4e4cfc72::t_488cdffc98c7e7 178-206
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "1a2f8c8fe2a25a647bdb544005d03c54e8d61bbf",
+  "prompts": {},
+  "sessions": {
+    "s_4b55cc4e4cfc72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2b784b31-6f00-4a99-ad69-e5cf0ad7e936",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
