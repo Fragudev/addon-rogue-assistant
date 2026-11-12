@@ -1,0 +1,19 @@
+release-notes/v1.0.1.md
+  s_c6ab3a35ef84b1::t_65b0e42914d906 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "6241f5708294bc8489889e3a42e71340055be531",
+  "prompts": {},
+  "sessions": {
+    "s_c6ab3a35ef84b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "51adfedf-af80-4bac-ba08-76a6cfee1498",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
