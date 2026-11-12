@@ -82,8 +82,28 @@ describe("WeaponEnchants", function()
       options.enchants[625] = 8928 -- Instant Poison VI
       local stone = { active = true, ms = 600000, charges = 5, enchantID = 1643 }
       assert.same({ { kind = "stone", seconds = 600 } }, WeaponEnchants.Rows(stone, {}, options))
-      local learnedPoison = { active = true, ms = 600000, charges = 0, enchantID = 625 }
-      assert.same({ { kind = "poison", seconds = 600 } }, WeaponEnchants.Rows(learnedPoison, {}, options))
+      local learnedPoison = { active = true, ms = 600000, charges = 5, enchantID = 625 }
+      assert.same({ { kind = "poison", seconds = 600, charges = 5 } }, WeaponEnchants.Rows(learnedPoison, {}, options))
+    end)
+
+    it("drops a learned poison whose charges ran out, keeping the stone of the tooltip", function()
+      options.enchants[625] = 8928 -- Instant Poison VI
+      local spent = { active = true, ms = 600000, charges = 0, enchantID = 625 }
+      local tooltip = { { name = "Weighted +6", seconds = 1800 }, { name = "Instant Poison VI", seconds = 600 } }
+      assert.same({}, WeaponEnchants.Rows(spent, {}, options))
+      assert.same({ { kind = "stone", seconds = 1800 } }, WeaponEnchants.Rows(spent, tooltip, options))
+    end)
+
+    it("drops a poison the tooltip lists when the API reports no charges left", function()
+      local spent = { active = true, ms = 600000, charges = 0, enchantID = 625 }
+      local tooltip = { { name = "Instant Poison VI", seconds = 600 }, { name = "Weighted +6", seconds = 1800 } }
+      assert.same({ { kind = "stone", seconds = 1800 } }, WeaponEnchants.Rows(spent, tooltip, options))
+    end)
+
+    it("drops a tooltip poison line that shows 0 charges", function()
+      local tooltip =
+        { { name = "Instant Poison VI", seconds = 600, charges = 0 }, { name = "Weighted +6", seconds = 1800 } }
+      assert.same({ { kind = "stone", seconds = 1800 } }, WeaponEnchants.Rows(nil, tooltip, options))
     end)
 
     it("adds the stone of the tooltip to the poison the API reports (measured on Forever)", function()
