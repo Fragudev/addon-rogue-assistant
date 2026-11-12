@@ -106,7 +106,8 @@ function WeaponEnchants.Rows(enchant, tooltip, options)
   end
   if enchant and enchant.active then
     local kind = apiKind(enchant, options)
-    -- The API reports the poison when there is one: with 0 charges and a poison learned or listed, that poison is spent.
+    -- The API reports the poison when there is one: with 0 charges and a poison learned or listed, that poison is
+    -- spent.
     if enchant.charges == 0 and (kind == "poison" or byKind.poison) then
       byKind.poison = nil
     else
