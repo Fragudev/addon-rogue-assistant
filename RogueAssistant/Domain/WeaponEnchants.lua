@@ -94,7 +94,7 @@ end
 --   tooltip   result of ParseTooltip
 --   options   { enchants = enchantID -> itemID, poisonNames = item name -> true }
 -- Each tooltip line gives the row of its kind. The API enchant (on Forever, the poison) replaces the row of its kind
--- with its exact time and charges.
+-- with its exact time and charges. A poison with no charges left is spent: it no longer acts, so it gives no row.
 function WeaponEnchants.Rows(enchant, tooltip, options)
   local byKind = {}
   for _, line in ipairs(tooltip or {}) do
@@ -106,11 +106,19 @@ function WeaponEnchants.Rows(enchant, tooltip, options)
   end
   if enchant and enchant.active then
     local kind = apiKind(enchant, options)
-    local row = { kind = kind, seconds = enchant.ms and math.floor(enchant.ms / 1000) or nil }
-    if kind == "poison" and enchant.charges and enchant.charges > 0 then
-      row.charges = enchant.charges
+    -- The API reports the poison when there is one: with 0 charges and a poison learned or listed, that poison is spent.
+    if enchant.charges == 0 and (kind == "poison" or byKind.poison) then
+      byKind.poison = nil
+    else
+      local row = { kind = kind, seconds = enchant.ms and math.floor(enchant.ms / 1000) or nil }
+      if kind == "poison" and enchant.charges and enchant.charges > 0 then
+        row.charges = enchant.charges
+      end
+      byKind[kind] = row
     end
-    byKind[kind] = row
+  end
+  if byKind.poison and byKind.poison.charges == 0 then
+    byKind.poison = nil
   end
   local rows = {}
   for _, kind in ipairs({ "poison", "stone" }) do
