@@ -1,0 +1,21 @@
+RogueAssistant/Domain/WeaponEnchants.lua
+  s_c6ab3a35ef84b1::t_808fd42e1bd521 97,109-117,119-121
+tests/weapon_enchants_spec.lua
+  s_c6ab3a35ef84b1::t_bb52241e7a8c64 85-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "2fd51363712f3d8a9df5a9dab571a2a1a55a197c",
+  "prompts": {},
+  "sessions": {
+    "s_c6ab3a35ef84b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "51adfedf-af80-4bac-ba08-76a6cfee1498",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Francis Gutiérrez <francisge@ext.inditex.com>"
+    }
+  }
+}
