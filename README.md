@@ -93,6 +93,30 @@ tools/package.sh dev
 Every pull request runs lint, the tests with a minimum of 80% line coverage, a format check and a package build.
 Pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## Contributing
+
+Bug reports and ideas are welcome as [issues](https://github.com/Fragudev/addon-rogue-assistant/issues). Pull requests
+are open to maintainers only. Day-to-day work lands on `develop`, directly or through short-lived branches, and `main`
+only takes pull requests from `develop` approved by the owner.
+
+## Releasing
+
+Betas ship from `develop` and releases from `main`; only the owner can push version tags. Write the notes in
+`release-notes/<tag>.md`, then push the tag. The **Release** workflow checks that the tag is on the right branch, runs
+the full CI and, only if both pass, stamps the version into the TOC, zips `RogueAssistant/`, publishes a GitHub
+release and uploads the zip to CurseForge.
+
+```bash
+# Beta: tag develop
+git switch develop && git pull && git tag v1.2.0-beta.1 && git push origin v1.2.0-beta.1
+# Release: merge develop into main through a pull request, then tag main
+git switch main && git pull && git tag v1.2.0 && git push origin v1.2.0
+```
+
+Tags containing a hyphen are published as betas (a GitHub pre-release and a CurseForge beta), the rest as releases.
+After a release, merge `main` back into `develop`. Only `RogueAssistant/` is shipped. If the CurseForge upload fails,
+run the **Release** workflow by hand with the existing tag to publish it again.
+
 ## Licence
 
 Proprietary, see [LICENSE](LICENSE). World of Warcraft is a trademark of Blizzard Entertainment, Inc.; this project is
