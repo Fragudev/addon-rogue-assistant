@@ -32,8 +32,9 @@ local LIST = {
   { itemID = 8984, kind = "poison" }, -- Deadly Poison III
   { itemID = 2893, kind = "poison" }, -- Deadly Poison II
   { itemID = 2892, kind = "poison" }, -- Deadly Poison
-  { itemID = 3776, kind = "poison" }, -- Crippling Poison II
-  { itemID = 3775, kind = "poison" }, -- Crippling Poison
+  -- Crippling Poison has no charges: the API reports 0 for it while it is active.
+  { itemID = 3776, kind = "poison", noCharges = true }, -- Crippling Poison II
+  { itemID = 3775, kind = "poison", noCharges = true }, -- Crippling Poison
   { itemID = 9186, kind = "poison" }, -- Mind-numbing Poison III
   { itemID = 6951, kind = "poison" }, -- Mind-numbing Poison II
   { itemID = 5237, kind = "poison" }, -- Mind-numbing Poison

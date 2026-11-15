@@ -88,27 +88,43 @@ local function lineKind(line, options)
   return "stone"
 end
 
+-- Whether the poison of `itemID` has no charges (Crippling Poison): 0 charges then means active, not spent.
+local function chargeless(itemID)
+  local entry = itemID and Items.BY_ID[itemID]
+  return entry ~= nil and entry.noCharges == true
+end
+
 -- The rows of a weapon, poison first: { kind = "poison"|"stone", seconds, step, charges }; step is set only for a row
 -- read from the tooltip.
 --   enchant   entry of Api.GetWeaponEnchants, or nil
 --   tooltip   result of ParseTooltip
---   options   { enchants = enchantID -> itemID, poisonNames = item name -> true }
+--   options   { enchants = enchantID -> itemID, poisonNames = item name -> itemID }
 -- Each tooltip line gives the row of its kind. The API enchant (on Forever, the poison) replaces the row of its kind
--- with its exact time and charges. A poison with no charges left is spent: it no longer acts, so it gives no row.
+-- with its exact time and charges. A poison with no charges left is spent: it no longer acts, so it gives no row. A
+-- poison that never has charges (Crippling Poison) is never spent that way.
 function WeaponEnchants.Rows(enchant, tooltip, options)
   local byKind = {}
+  local tooltipPoisonItem
   for _, line in ipairs(tooltip or {}) do
     local kind = lineKind(line, options)
     if byKind[kind] then
       kind = other(kind)
     end
+    if kind == "poison" and not byKind.poison then
+      tooltipPoisonItem = options.poisonNames[line.name]
+    end
     byKind[kind] = byKind[kind] or { kind = kind, seconds = line.seconds, step = line.step, charges = line.charges }
   end
   if enchant and enchant.active then
     local kind = apiKind(enchant, options)
-    -- The API reports the poison when there is one: with 0 charges and a poison learned or listed, that poison is
-    -- spent.
-    if enchant.charges == 0 and (kind == "poison" or byKind.poison) then
+    local learned = enchant.enchantID and options.enchants[enchant.enchantID]
+    local uncharged = chargeless(learned or tooltipPoisonItem)
+    if uncharged then
+      kind = "poison"
+    end
+    -- The API reports the poison when there is one: with 0 charges and a charged poison learned or listed, that
+    -- poison is spent.
+    if enchant.charges == 0 and not uncharged and (kind == "poison" or byKind.poison) then
       byKind.poison = nil
     else
       local row = { kind = kind, seconds = enchant.ms and math.floor(enchant.ms / 1000) or nil }
