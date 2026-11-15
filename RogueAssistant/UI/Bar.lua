@@ -140,7 +140,7 @@ function Bar.IconFor(slot)
   return Api.GetEquippedTexture(slot) or EMPTY_SLOT_ICON[slot]
 end
 
--- item name -> true for every catalog poison whose name the client knows. Rebuilt until every name has loaded.
+-- item name -> item id for every catalog poison whose name the client knows. Rebuilt until every name has loaded.
 function Bar.PoisonNames()
   if Bar.poisonNames and Bar.poisonNamesComplete then
     return Bar.poisonNames
@@ -150,7 +150,7 @@ function Bar.PoisonNames()
     if entry.kind == "poison" then
       local name = Api.GetItemName(entry.itemID)
       if name then
-        names[name] = true
+        names[name] = entry.itemID
       else
         complete = false
       end

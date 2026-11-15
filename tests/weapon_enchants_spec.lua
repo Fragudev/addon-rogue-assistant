@@ -7,7 +7,7 @@ describe("WeaponEnchants", function()
     WowStub.Reset()
     WeaponEnchants = Loader.Load({ "Core/Constants.lua", "Data/Items.lua", "Domain/WeaponEnchants.lua" }).WeaponEnchants
     units = WeaponEnchants.Units({ "%s (%d |4hour:hours;)", "%s (%d min)", "%s (%d sec)" })
-    options = { enchants = {}, poisonNames = { ["Instant Poison VI"] = true } }
+    options = { enchants = {}, poisonNames = { ["Instant Poison VI"] = 8928 } }
   end)
 
   describe("Units", function()
@@ -151,6 +151,35 @@ describe("WeaponEnchants", function()
         { { kind = "stone", seconds = 600 } },
         WeaponEnchants.Rows(nil, { { name = "Weighted (+8 Damage)", seconds = 600 } }, options)
       )
+    end)
+
+    describe("Crippling Poison, which has no charges", function()
+      -- The API reports 0 charges for it from the moment it is applied.
+      local crippling = { active = true, ms = 1790000, charges = 0, enchantID = 22 }
+
+      it("keeps a learned Crippling Poison with 0 charges as an active poison", function()
+        options.enchants[22] = 3775 -- Crippling Poison
+        assert.same({ { kind = "poison", seconds = 1790 } }, WeaponEnchants.Rows(crippling, {}, options))
+      end)
+
+      it("keeps Crippling Poison II the same way", function()
+        options.enchants[22] = 3776 -- Crippling Poison II
+        assert.same({ { kind = "poison", seconds = 1790 } }, WeaponEnchants.Rows(crippling, {}, options))
+      end)
+
+      it("knows an unlearned Crippling Poison by its tooltip name, next to a stone", function()
+        options.poisonNames["Crippling Poison"] = 3775
+        local tooltip = { { name = "Crippling Poison", seconds = 1800 }, { name = "Weighted +6", seconds = 1800 } }
+        assert.same({
+          { kind = "poison", seconds = 1790 },
+          { kind = "stone", seconds = 1800 },
+        }, WeaponEnchants.Rows(crippling, tooltip, options))
+      end)
+
+      it("still drops a charged poison whose charges ran out", function()
+        options.enchants[22] = 8928 -- Instant Poison VI
+        assert.same({}, WeaponEnchants.Rows(crippling, {}, options))
+      end)
     end)
   end)
 end)
