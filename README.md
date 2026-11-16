@@ -95,9 +95,8 @@ Pull request titles follow [Conventional Commits](https://www.conventionalcommit
 
 ## Contributing
 
-Bug reports and ideas are welcome as [issues](https://github.com/Fragudev/addon-rogue-assistant/issues). Pull requests
-are open to maintainers only. Day-to-day work lands on `develop`, directly or through short-lived branches, and `main`
-only takes pull requests from `develop` approved by the owner.
+Bug reports and ideas are welcome from everyone as issues; pull requests are open to maintainers only. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for what to include in a report and how maintainers work.
 
 ## Releasing
 
